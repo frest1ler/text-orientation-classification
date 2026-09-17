@@ -29,6 +29,9 @@ The quick run uses official pretrained weights, 2,048 train pairs, 512
 validation pairs, one frozen epoch, and two fine-tuning epochs. It is intended
 to expose environment and pipeline failures before spending a full session.
 
+Training is launched as `python -m scripts.train`, so imports resolve from the
+repository root without relying on a manually configured `PYTHONPATH`.
+
 ## Return artifact
 
 The final cell prints one path similar to:
