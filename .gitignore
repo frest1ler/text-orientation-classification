@@ -1,0 +1,29 @@
+# Source datasets and archives
+/data/
+/test.zip
+*.zip
+
+# Model and experiment outputs
+/checkpoints/
+*.ckpt
+*.pt
+*.pth
+/runs/
+/wandb/
+
+# Locally generated data-audit details (contain test-derived records/images)
+/artifacts/data_audit/image_metadata.csv
+/artifacts/data_audit/random_sample.png
+
+# Local caches and environments
+/.cache/
+/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store

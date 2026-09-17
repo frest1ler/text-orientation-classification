@@ -1,0 +1,149 @@
+{
+  "archive": "test.zip",
+  "archive_size_bytes": 681431081,
+  "archive_member_count": 20001,
+  "image_count": 20000,
+  "decoded_image_count": 20000,
+  "broken_images": [],
+  "submission": {
+    "columns": [
+      "image_id",
+      "p_180"
+    ],
+    "row_count": 20000,
+    "unique_image_ids": 20000,
+    "duplicate_image_ids": 0,
+    "missing_images": [],
+    "images_not_in_submission": [],
+    "order_matches_archive_sort": true,
+    "columns_match_expected": true
+  },
+  "formats": {
+    "PNG": 20000
+  },
+  "modes": {
+    "RGB": 20000
+  },
+  "width": {
+    "min": 25.0,
+    "p01": 40.0,
+    "p05": 61.0,
+    "p25": 129.0,
+    "median": 238.0,
+    "p75": 479.25,
+    "p95": 1047.0,
+    "p99": 1406.0,
+    "max": 1599.0,
+    "mean": 357.6036
+  },
+  "height": {
+    "min": 10.0,
+    "p01": 12.0,
+    "p05": 16.0,
+    "p25": 27.0,
+    "median": 42.0,
+    "p75": 76.0,
+    "p95": 195.0,
+    "p99": 289.0,
+    "max": 492.0,
+    "mean": 64.39815
+  },
+  "aspect_ratio": {
+    "min": 0.7209302325581395,
+    "p01": 1.7618857142857143,
+    "p05": 2.319909090909091,
+    "p25": 3.503241019466185,
+    "median": 4.894899285250162,
+    "p75": 7.518636363636364,
+    "p95": 14.447784810126576,
+    "p99": 22.609812382739204,
+    "max": 49.666666666666664,
+    "mean": 6.220857753307244
+  },
+  "file_size": {
+    "min": 582.0,
+    "p01": 1468.97,
+    "p05": 2414.95,
+    "p25": 6718.75,
+    "median": 13499.5,
+    "p75": 34594.5,
+    "p95": 138698.55,
+    "p99": 259708.12999999983,
+    "max": 1108945.0,
+    "mean": 33928.5463
+  },
+  "pixel_mean": {
+    "min": 5.745678901672363,
+    "p01": 34.63110931396484,
+    "p05": 54.60098075866699,
+    "p25": 99.6558780670166,
+    "median": 141.27395629882812,
+    "p75": 183.68267440795898,
+    "p95": 219.49774017333985,
+    "p99": 235.66267150878903,
+    "max": 252.2646484375,
+    "mean": 140.30049190349578
+  },
+  "pixel_std": {
+    "min": 2.563903570175171,
+    "p01": 12.544204635620117,
+    "p05": 21.806710529327393,
+    "p25": 38.438931465148926,
+    "median": 52.83229446411133,
+    "p75": 68.31170463562012,
+    "p95": 89.00278549194336,
+    "p99": 101.67391555786132,
+    "max": 119.76445007324219,
+    "mean": 53.77913038287163
+  },
+  "exact_duplicate_group_count": 0,
+  "exact_duplicate_image_count": 0,
+  "perceptual_hash_collision_group_count": 4,
+  "perceptual_hash_collision_image_count": 8,
+  "exact_duplicate_groups": [],
+  "perceptual_hash_collision_groups": [
+    [
+      "test_01455",
+      "test_04488"
+    ],
+    [
+      "test_01525",
+      "test_06901"
+    ],
+    [
+      "test_03573",
+      "test_18910"
+    ],
+    [
+      "test_04410",
+      "test_18606"
+    ]
+  ],
+  "random_sample_seed": 42,
+  "random_sample_image_ids": [
+    "test_03648",
+    "test_00819",
+    "test_09012",
+    "test_08024",
+    "test_07314",
+    "test_04572",
+    "test_03358",
+    "test_17870",
+    "test_02848",
+    "test_19349",
+    "test_13825",
+    "test_01041",
+    "test_00976",
+    "test_03070",
+    "test_07164",
+    "test_07623",
+    "test_16559",
+    "test_19726",
+    "test_00869",
+    "test_18390",
+    "test_06515",
+    "test_17856",
+    "test_13746",
+    "test_07223"
+  ]
+}
