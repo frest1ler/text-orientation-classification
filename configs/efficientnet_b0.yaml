@@ -1,0 +1,54 @@
+experiment:
+  name: efficientnet_b0_384x96
+  seed: 42
+  output_dir: artifacts/experiments
+
+data:
+  test_zip: test.zip
+  image_prefix: test/images/
+  sample_submission_member: sample_submission.csv
+  num_workers: 2
+
+synthetic:
+  train_samples: 50000
+  validation_samples: 5000
+  languages: [ru, en, digits, mixed]
+  font_assets_dir: assets/fonts
+  min_font_size: 14
+  max_font_size: 96
+  min_words: 1
+  max_words: 6
+  multiline_probability: 0.25
+  jpeg_probability: 0.35
+  geometry_percentiles: [0.0, 0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99, 1.0]
+  height_quantiles: [10, 12, 16, 27, 42, 76, 195, 289, 492]
+  aspect_ratio_quantiles: [0.72, 1.76, 2.32, 3.50, 4.89, 7.52, 14.45, 22.61, 49.67]
+  min_render_width: 25
+  max_render_width: 1599
+
+model:
+  name: efficientnet_b0
+  pretrained: true
+  input_height: 96
+  input_width: 384
+  dropout: 0.2
+
+training:
+  batch_size: 64
+  frozen_epochs: 2
+  finetune_epochs: 8
+  frozen_learning_rate: 0.001
+  finetune_learning_rate: 0.0001
+  weight_decay: 0.0001
+  amp: true
+  deterministic: true
+  symmetry_loss_weight: 0.1
+
+validation:
+  primary_metric: brier_score
+  early_stopping_patience: 3
+
+inference:
+  batch_size: 128
+  symmetric_tta: false
+  temperature: 1.0

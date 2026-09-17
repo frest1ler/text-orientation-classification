@@ -9,6 +9,10 @@ import torch
 from PIL import Image
 
 
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD = (0.229, 0.224, 0.225)
+
+
 @dataclass(frozen=True)
 class ResizePadToTensor:
     """Fit an RGB image into a fixed canvas without stretching or cropping."""
@@ -43,3 +47,17 @@ class ResizePadToTensor:
         mean = torch.tensor(self.mean, dtype=tensor.dtype).view(3, 1, 1)
         std = torch.tensor(self.std, dtype=tensor.dtype).view(3, 1, 1)
         return (tensor - mean) / std
+
+
+def build_preprocess(model_name: str, height: int, width: int) -> ResizePadToTensor:
+    """Create preprocessing aligned with model pretraining."""
+    if model_name in {"mobilenet_v3_large", "efficientnet_b0", "vit_b_16"}:
+        return ResizePadToTensor(
+            height=height,
+            width=width,
+            mean=IMAGENET_MEAN,
+            std=IMAGENET_STD,
+        )
+    if model_name == "small_cnn":
+        return ResizePadToTensor(height=height, width=width)
+    raise ValueError(f"Unsupported model preprocessing: {model_name}")

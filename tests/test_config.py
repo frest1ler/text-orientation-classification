@@ -8,6 +8,7 @@ from src.config import load_config
 
 
 CONFIG_PATH = Path("configs/baseline.yaml")
+EFFICIENTNET_CONFIG_PATH = Path("configs/efficientnet_b0.yaml")
 
 
 def read_raw_config() -> dict:
@@ -28,6 +29,13 @@ def test_baseline_config_is_valid() -> None:
     assert (config.model.input_height, config.model.input_width) == (96, 384)
     assert config.validation.primary_metric == "brier_score"
     assert config.to_dict()["experiment"]["seed"] == 42
+
+
+def test_efficientnet_config_is_valid() -> None:
+    config = load_config(EFFICIENTNET_CONFIG_PATH)
+
+    assert config.model.name == "efficientnet_b0"
+    assert config.experiment.name == "efficientnet_b0_384x96"
 
 
 def test_unknown_key_is_rejected(tmp_path: Path) -> None:

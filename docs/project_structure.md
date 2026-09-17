@@ -9,16 +9,18 @@ from `vision_classifier_pipeline`.
 ```text
 configs/
   baseline.yaml          Validated baseline experiment settings
+  efficientnet_b0.yaml   Controlled compact-backbone comparison
 scripts/
   check_config.py        Configuration and device smoke check
   preview_synthetic.py   Local visual check of generated pairs
   sanity_overfit.py      Tiny-set paired learning verification
   smoke_train.py         End-to-end train/checkpoint smoke run
+  train.py               Frozen-head and fine-tuning training entry point
 src/
   config.py              Typed YAML loading and strict validation
   data_audit.py          Immutable ZIP audit from stage 1
   metrics.py             Brier score and diagnostic probability metrics
-  models.py              Small technical CNN and model factory
+  models.py              Small CNN and compact pretrained backbones
   reproducibility.py     Seeds, DataLoader generator, device selection
   synthetic.py           Deterministic rendering and paired dataset
   text_corpus.py         Split-specific self-contained text sources

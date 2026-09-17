@@ -76,3 +76,22 @@ The pair objective and observed sanity results are documented in
 [docs/training_pipeline.md](docs/training_pipeline.md). The ordered model and
 augmentation comparisons are tracked in
 [docs/experiment_plan.md](docs/experiment_plan.md).
+
+## Compact model training
+
+Train the primary MobileNetV3-Large experiment:
+
+```bash
+PYTHONPATH=. python3 scripts/train.py --config configs/baseline.yaml
+```
+
+Run the controlled EfficientNet-B0 comparison:
+
+```bash
+PYTHONPATH=. python3 scripts/train.py --config configs/efficientnet_b0.yaml
+```
+
+Both use torchvision ImageNet weights, rectangular preprocessing, paired
+training, mixed precision on CUDA, and best-checkpoint selection by symmetric
+Brier score. Details are in
+[docs/compact_models.md](docs/compact_models.md).
