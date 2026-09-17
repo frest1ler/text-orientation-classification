@@ -7,6 +7,7 @@ from `vision_classifier_pipeline`.
 ## Current modules
 
 ```text
+colab_train.ipynb       Concise Colab GPU training and artifact export
 configs/
   baseline.yaml          Validated baseline experiment settings
   efficientnet_b0.yaml   Controlled compact-backbone comparison

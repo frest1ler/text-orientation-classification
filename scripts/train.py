@@ -25,6 +25,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train-base-samples", type=int)
     parser.add_argument("--validation-base-samples", type=int)
     parser.add_argument("--num-workers", type=int)
+    parser.add_argument("--batch-size", type=int)
+    parser.add_argument("--validation-batch-size", type=int)
+    parser.add_argument("--frozen-epochs", type=int)
+    parser.add_argument("--finetune-epochs", type=int)
+    parser.add_argument("--run-name")
     return parser.parse_args()
 
 
@@ -118,13 +123,41 @@ def main() -> None:
     preprocess = build_preprocess(
         config.model.name, config.model.input_height, config.model.input_width
     )
-    train_samples = args.train_base_samples or config.synthetic.train_samples
+    train_samples = (
+        config.synthetic.train_samples
+        if args.train_base_samples is None
+        else args.train_base_samples
+    )
     validation_samples = (
-        args.validation_base_samples or config.synthetic.validation_samples
+        config.synthetic.validation_samples
+        if args.validation_base_samples is None
+        else args.validation_base_samples
     )
     num_workers = config.data.num_workers if args.num_workers is None else args.num_workers
+    batch_size = config.training.batch_size if args.batch_size is None else args.batch_size
+    validation_batch_size = (
+        config.inference.batch_size
+        if args.validation_batch_size is None
+        else args.validation_batch_size
+    )
+    frozen_epochs = (
+        config.training.frozen_epochs
+        if args.frozen_epochs is None
+        else args.frozen_epochs
+    )
+    finetune_epochs = (
+        config.training.finetune_epochs
+        if args.finetune_epochs is None
+        else args.finetune_epochs
+    )
+    if train_samples <= 0 or validation_samples <= 0:
+        raise ValueError("train and validation sample counts must be positive")
     if num_workers < 0:
         raise ValueError("num_workers must be non-negative")
+    if batch_size <= 0 or validation_batch_size <= 0:
+        raise ValueError("batch sizes must be positive")
+    if frozen_epochs < 0 or finetune_epochs <= 0:
+        raise ValueError("frozen epochs must be non-negative and finetune epochs positive")
     train_dataset = PairedSyntheticDataset(
         config.synthetic, "train", train_samples, config.experiment.seed, preprocess
     )
@@ -138,7 +171,7 @@ def main() -> None:
     pin_memory = device.type == "cuda"
     train_loader = make_loader(
         train_dataset,
-        config.training.batch_size,
+        batch_size,
         True,
         num_workers,
         config.experiment.seed,
@@ -146,7 +179,7 @@ def main() -> None:
     )
     validation_loader = make_loader(
         validation_dataset,
-        config.inference.batch_size,
+        validation_batch_size,
         False,
         num_workers,
         config.experiment.seed,
@@ -156,7 +189,8 @@ def main() -> None:
     model = build_model(
         config.model.name, dropout=config.model.dropout, pretrained=pretrained
     ).to(device)
-    output_dir = Path(config.experiment.output_dir) / config.experiment.name
+    run_name = args.run_name or config.experiment.name
+    output_dir = Path(config.experiment.output_dir) / run_name
     output_dir.mkdir(parents=True, exist_ok=True)
     write_json(output_dir / "config.json", config.to_dict())
     write_json(
@@ -166,6 +200,11 @@ def main() -> None:
             "train_base_samples": train_samples,
             "validation_base_samples": validation_samples,
             "num_workers": num_workers,
+            "batch_size": batch_size,
+            "validation_batch_size": validation_batch_size,
+            "frozen_epochs": frozen_epochs,
+            "finetune_epochs": finetune_epochs,
+            "run_name": run_name,
             "device": str(device),
         },
     )
@@ -179,6 +218,11 @@ def main() -> None:
                 "train_pairs": len(train_dataset),
                 "validation_pairs": len(validation_dataset),
                 "num_workers": num_workers,
+                "batch_size": batch_size,
+                "validation_batch_size": validation_batch_size,
+                "frozen_epochs": frozen_epochs,
+                "finetune_epochs": finetune_epochs,
+                "run_name": run_name,
             },
             indent=2,
         )
@@ -188,7 +232,7 @@ def main() -> None:
     epoch = 0
     best_brier = float("inf")
     patience_used = 0
-    if config.training.frozen_epochs > 0:
+    if frozen_epochs > 0:
         freeze_backbone(model)
         optimizer = torch.optim.AdamW(
             (parameter for parameter in model.parameters() if parameter.requires_grad),
@@ -197,7 +241,7 @@ def main() -> None:
         )
         epoch, best_brier, patience_used, stopped = run_phase(
             "frozen",
-            config.training.frozen_epochs,
+            frozen_epochs,
             epoch,
             model,
             optimizer,
@@ -222,7 +266,7 @@ def main() -> None:
     patience_used = 0
     run_phase(
         "finetune",
-        config.training.finetune_epochs,
+        finetune_epochs,
         epoch,
         model,
         optimizer,

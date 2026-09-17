@@ -95,3 +95,8 @@ Both use torchvision ImageNet weights, rectangular preprocessing, paired
 training, mixed precision on CUDA, and best-checkpoint selection by symmetric
 Brier score. Details are in
 [docs/compact_models.md](docs/compact_models.md).
+
+For the first GPU verification, open `colab_train.ipynb`, keep
+`MODEL="mobilenet"` and `QUICK_RUN=True`, and run all cells on a T4 runtime.
+The exact steps and the result archive to return are documented in
+[docs/colab_run.md](docs/colab_run.md).
