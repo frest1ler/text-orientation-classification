@@ -42,7 +42,7 @@ training:
   weight_decay: 0.0001
   amp: true
   deterministic: true
-  symmetry_loss_weight: 0.0
+  symmetry_loss_weight: 0.1
 
 validation:
   primary_metric: brier_score

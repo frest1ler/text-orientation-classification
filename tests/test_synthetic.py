@@ -5,6 +5,7 @@ from PIL import Image
 
 from src.config import load_config
 from src.synthetic import (
+    PairedSyntheticDataset,
     SyntheticOrientationDataset,
     SyntheticRenderer,
     sample_target_size,
@@ -76,6 +77,20 @@ def test_dataset_pairs_are_exact_rotations_and_balanced() -> None:
 
     assert labels.count(0) == labels.count(1) == 3
     assert len(dataset) == 6
+
+
+def test_paired_dataset_returns_opposite_orientations() -> None:
+    config = load_config("configs/baseline.yaml")
+    dataset = PairedSyntheticDataset(
+        config.synthetic, "train", base_samples=4, global_seed=42
+    )
+
+    assert len(dataset) == 4
+    assert [dataset[index]["target"] for index in range(4)] == [0, 1, 0, 1]
+    for index in range(4):
+        sample = dataset[index]
+        expected = sample["image"].transpose(Image.Transpose.ROTATE_180)
+        assert np.array_equal(np.asarray(sample["rotated"]), np.asarray(expected))
 
 
 def test_target_geometry_matches_audit_distribution() -> None:

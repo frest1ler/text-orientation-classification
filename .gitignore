@@ -10,6 +10,7 @@
 *.pth
 /runs/
 /wandb/
+/artifacts/experiments/
 
 # Locally generated data-audit details (contain test-derived records/images)
 /artifacts/data_audit/image_metadata.csv

@@ -270,3 +270,39 @@ class SyntheticOrientationDataset(Dataset):
         if self.transform is not None:
             image = self.transform(image)
         return image, label
+
+
+class PairedSyntheticDataset(Dataset):
+    """Return an image and its exact 180-degree counterpart as one sample."""
+
+    def __init__(
+        self,
+        config: SyntheticConfig,
+        split: Split,
+        base_samples: int,
+        global_seed: int,
+        transform: Callable[[Image.Image], object] | None = None,
+    ) -> None:
+        if base_samples <= 0:
+            raise ValueError("base_samples must be positive")
+        self.renderer = SyntheticRenderer(config, split, global_seed)
+        self.base_samples = base_samples
+        self.transform = transform
+
+    def __len__(self) -> int:
+        return self.base_samples
+
+    def __getitem__(self, index: int) -> dict[str, object]:
+        if index < 0 or index >= len(self):
+            raise IndexError(index)
+        upright = self.renderer.render(index)
+        upside_down = upright.transpose(Image.Transpose.ROTATE_180)
+        target = index % 2
+        if target == 0:
+            image, rotated = upright, upside_down
+        else:
+            image, rotated = upside_down, upright
+        if self.transform is not None:
+            image = self.transform(image)
+            rotated = self.transform(rotated)
+        return {"image": image, "rotated": rotated, "target": target}

@@ -57,3 +57,22 @@ PYTHONPATH=. python3 scripts/preview_synthetic.py \
 The preview is ignored by Git. The generator design, split isolation, geometry
 matching, font sources, and licences are described in
 [docs/synthetic_data.md](docs/synthetic_data.md).
+
+## Paired pipeline checks
+
+Verify that the small technical CNN can memorize a fixed paired dataset:
+
+```bash
+PYTHONPATH=. python3 scripts/sanity_overfit.py
+```
+
+Run a short end-to-end train, validation, checkpoint, and restore check:
+
+```bash
+PYTHONPATH=. python3 scripts/smoke_train.py
+```
+
+The pair objective and observed sanity results are documented in
+[docs/training_pipeline.md](docs/training_pipeline.md). The ordered model and
+augmentation comparisons are tracked in
+[docs/experiment_plan.md](docs/experiment_plan.md).
