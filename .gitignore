@@ -14,6 +14,7 @@
 # Locally generated data-audit details (contain test-derived records/images)
 /artifacts/data_audit/image_metadata.csv
 /artifacts/data_audit/random_sample.png
+/artifacts/synthetic*_preview.png
 
 # Local caches and environments
 /.cache/

@@ -11,20 +11,23 @@ configs/
   baseline.yaml          Validated baseline experiment settings
 scripts/
   check_config.py        Configuration and device smoke check
+  preview_synthetic.py   Local visual check of generated pairs
 src/
   config.py              Typed YAML loading and strict validation
   data_audit.py          Immutable ZIP audit from stage 1
   reproducibility.py     Seeds, DataLoader generator, device selection
+  synthetic.py           Deterministic rendering and paired dataset
+  text_corpus.py         Split-specific self-contained text sources
 tests/
   test_config.py
   test_data_audit.py
   test_reproducibility.py
+  test_synthetic.py
 ```
 
-Modules for synthetic generation, datasets, transforms, models, losses,
-training, calibration, inference, and submission creation will be added only
-when their respective stages are implemented. Empty placeholder modules are
-deliberately avoided.
+Modules for transforms, models, losses, training, calibration, inference, and
+submission creation will be added only when their respective stages are
+implemented. Empty placeholder modules are deliberately avoided.
 
 ## Configuration policy
 

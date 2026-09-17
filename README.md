@@ -41,3 +41,19 @@ The implementation is developed and tested locally on CPU; training will use
 an automatically detected GPU in Google Colab. See
 [docs/project_structure.md](docs/project_structure.md) for the current module
 boundaries and reproducibility policy.
+
+## Synthetic data preview
+
+Generate balanced, deterministic `0°/180°` pairs without writing a training
+dataset to disk:
+
+```bash
+PYTHONPATH=. python3 scripts/preview_synthetic.py \
+  --config configs/baseline.yaml \
+  --split train \
+  --pairs 8
+```
+
+The preview is ignored by Git. The generator design, split isolation, geometry
+matching, font sources, and licences are described in
+[docs/synthetic_data.md](docs/synthetic_data.md).

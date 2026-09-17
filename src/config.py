@@ -38,7 +38,18 @@ class SyntheticConfig:
     train_samples: int
     validation_samples: int
     languages: list[str]
-    validation_font_fraction: float
+    font_assets_dir: str
+    min_font_size: int
+    max_font_size: int
+    min_words: int
+    max_words: int
+    multiline_probability: float
+    jpeg_probability: float
+    geometry_percentiles: list[float]
+    height_quantiles: list[float]
+    aspect_ratio_quantiles: list[float]
+    min_render_width: int
+    max_render_width: int
 
 
 @dataclass(frozen=True)
@@ -133,9 +144,69 @@ def validate_config(config: Config) -> None:
     _require(bool(config.synthetic.languages), "synthetic.languages must not be empty")
     unknown_languages = sorted(set(config.synthetic.languages) - SUPPORTED_LANGUAGES)
     _require(not unknown_languages, f"unsupported synthetic languages: {unknown_languages}")
+    _require(config.synthetic.min_font_size > 0, "synthetic.min_font_size must be positive")
     _require(
-        0 < config.synthetic.validation_font_fraction < 1,
-        "synthetic.validation_font_fraction must be between 0 and 1",
+        config.synthetic.max_font_size >= config.synthetic.min_font_size,
+        "synthetic.max_font_size must be >= synthetic.min_font_size",
+    )
+    _require(config.synthetic.min_words > 0, "synthetic.min_words must be positive")
+    _require(
+        config.synthetic.max_words >= config.synthetic.min_words,
+        "synthetic.max_words must be >= synthetic.min_words",
+    )
+    _require(
+        0 <= config.synthetic.multiline_probability <= 1,
+        "synthetic.multiline_probability must be in [0, 1]",
+    )
+    _require(
+        0 <= config.synthetic.jpeg_probability <= 1,
+        "synthetic.jpeg_probability must be in [0, 1]",
+    )
+    _require(
+        len(config.synthetic.geometry_percentiles) >= 2,
+        "synthetic geometry requires at least two percentile points",
+    )
+    _require(
+        len(config.synthetic.geometry_percentiles)
+        == len(config.synthetic.height_quantiles)
+        == len(config.synthetic.aspect_ratio_quantiles),
+        "synthetic geometry quantile lists must have equal lengths",
+    )
+    _require(
+        config.synthetic.geometry_percentiles[0] == 0
+        and config.synthetic.geometry_percentiles[-1] == 1,
+        "synthetic.geometry_percentiles must start at 0 and end at 1",
+    )
+    _require(
+        all(
+            left < right
+            for left, right in zip(
+                config.synthetic.geometry_percentiles[:-1],
+                config.synthetic.geometry_percentiles[1:],
+                strict=True,
+            )
+        ),
+        "synthetic.geometry_percentiles must be strictly increasing",
+    )
+    _require(
+        all(value > 0 for value in config.synthetic.height_quantiles),
+        "synthetic.height_quantiles must be positive",
+    )
+    _require(
+        all(value > 0 for value in config.synthetic.aspect_ratio_quantiles),
+        "synthetic.aspect_ratio_quantiles must be positive",
+    )
+    _require(
+        config.synthetic.min_render_width > 0,
+        "synthetic.min_render_width must be positive",
+    )
+    _require(
+        config.synthetic.max_render_width > 0,
+        "synthetic.max_render_width must be positive",
+    )
+    _require(
+        config.synthetic.max_render_width >= config.synthetic.min_render_width,
+        "synthetic.max_render_width must be >= synthetic.min_render_width",
     )
 
     _require(config.model.name in SUPPORTED_MODELS, f"unsupported model: {config.model.name}")

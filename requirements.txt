@@ -1,6 +1,6 @@
-numpy>=1.26,<3
+numpy==2.4.3
 pandas>=2.1,<4
-Pillow>=10,<13
+Pillow==12.1.1
 PyYAML>=6,<7
 matplotlib>=3.8,<4
 scikit-learn>=1.4,<2

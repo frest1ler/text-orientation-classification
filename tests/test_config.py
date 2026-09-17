@@ -44,3 +44,11 @@ def test_invalid_input_dimension_is_rejected(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="divisible by 16"):
         load_config(write_config(tmp_path, raw))
+
+
+def test_invalid_geometry_percentiles_are_rejected(tmp_path: Path) -> None:
+    raw = deepcopy(read_raw_config())
+    raw["synthetic"]["geometry_percentiles"][3] = 0.01
+
+    with pytest.raises(ValueError, match="strictly increasing"):
+        load_config(write_config(tmp_path, raw))
