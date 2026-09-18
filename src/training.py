@@ -126,10 +126,10 @@ def train_paired_epoch(
 
 
 @torch.inference_mode()
-def evaluate_paired(
+def predict_paired(
     model: nn.Module, loader: DataLoader, device: torch.device
-) -> dict[str, Any]:
-    """Compare direct and symmetry-enforced predictions on paired data."""
+) -> dict[str, np.ndarray]:
+    """Collect targets and direct/symmetric probabilities on paired data."""
     model.eval()
     targets_all: list[np.ndarray] = []
     direct_all: list[np.ndarray] = []
@@ -151,11 +151,24 @@ def evaluate_paired(
         )
     if not targets_all:
         raise ValueError("validation loader is empty")
-    targets = np.concatenate(targets_all)
     return {
-        "direct": binary_metrics(targets, np.concatenate(direct_all)),
-        "symmetric": binary_metrics(targets, np.concatenate(symmetric_all)),
-        "mean_symmetry_error": float(np.concatenate(symmetry_errors).mean()),
+        "targets": np.concatenate(targets_all),
+        "direct": np.concatenate(direct_all),
+        "symmetric": np.concatenate(symmetric_all),
+        "symmetry_error": np.concatenate(symmetry_errors),
+    }
+
+
+@torch.inference_mode()
+def evaluate_paired(
+    model: nn.Module, loader: DataLoader, device: torch.device
+) -> dict[str, Any]:
+    """Compare direct and symmetry-enforced predictions on paired data."""
+    predictions = predict_paired(model, loader, device)
+    return {
+        "direct": binary_metrics(predictions["targets"], predictions["direct"]),
+        "symmetric": binary_metrics(predictions["targets"], predictions["symmetric"]),
+        "mean_symmetry_error": float(predictions["symmetry_error"].mean()),
     }
 
 

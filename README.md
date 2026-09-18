@@ -105,3 +105,26 @@ Full Colab runs are compared with a separate Google Drive champion for each
 architecture. Checkpoints are promoted by symmetric Brier score only when the
 validation protocol fingerprint matches; quick runs are archived without
 promotion.
+
+## Calibration and OCR baselines
+
+Evaluate leakage-resistant five-fold calibration for a completed run:
+
+```bash
+python3 -m scripts.calibrate \
+  --run-dir artifacts/experiments/<run-name> \
+  --config configs/baseline.yaml
+```
+
+This stores OOF validation predictions and a final calibrator fitted only
+after method selection. Raw champion metrics remain unchanged.
+
+The optional offline OCR baseline compares Tesseract confidence for the image
+and its exact 180-degree rotation:
+
+```bash
+sudo apt-get install tesseract-ocr tesseract-ocr-rus
+python3 -m scripts.ocr_baseline --config configs/baseline.yaml
+```
+
+OCR is deliberately separate from CNN training and makes no network/API calls.

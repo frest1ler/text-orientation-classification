@@ -13,6 +13,9 @@ validation Brier score.
 - MobileNetV3-Large and EfficientNet-B0 frozen/fine-tuning pipeline.
 - Colab T4 quick-run and artifact export.
 - Per-model Drive champions with validation-protocol fingerprints.
+- Five-fold OOF comparison of uncalibrated, temperature-scaled, and Platt
+  probabilities; the final calibrator is then fitted on all validation data.
+- Offline Tesseract baseline comparing confidence at 0° and 180°.
 
 Every architecture owns an independent champion. A run can replace only the
 champion of the same model and only under a comparable validation protocol.
@@ -30,8 +33,11 @@ model champions for later cross-model and ensemble comparison.
 6. Deterministic train augmentation that changes by epoch while validation
    remains fixed.
 7. Direct inference versus symmetric `x + rot180(x)` inference.
-8. Probability calibration using validation predictions only.
-9. Offline OCR confidence baseline on both orientations.
+8. ~~Probability calibration using validation predictions only.~~ Implemented
+   with stratified OOF evaluation to avoid scoring a calibrator on its own fit
+   samples.
+9. ~~Offline OCR confidence baseline on both orientations.~~ Implemented as a
+   separate Tesseract experiment; execution requires the system OCR packages.
 10. ViT-B/16 after the compact pipeline is stable.
 11. CNN/OCR or CNN/ViT ensemble only if validation Brier improves materially.
 

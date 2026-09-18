@@ -20,6 +20,7 @@ prevents results from depending on a previous Colab session.
    MODEL = "mobilenet"
    QUICK_RUN = True
    PROMOTE_CHAMPION = not QUICK_RUN
+   RUN_CALIBRATION = not QUICK_RUN
    RUN_TESTS = True
    ```
 
@@ -83,3 +84,21 @@ text-orientation-results/
 Promotion is rejected when validation seed, sample count, synthetic settings,
 generator source, corpus source, or font manifest differ from the existing
 champion. The run ZIP remains available even when it is not promoted.
+
+## Calibration artifact
+
+Full runs execute five-fold stratified OOF calibration before creating the
+ZIP. `calibration.json` compares raw, temperature-scaled, and Platt-scaled
+probabilities. `validation_predictions.npz` contains the corresponding OOF
+predictions. The selected calibrator is fitted on all validation predictions
+for later test inference, but calibrated metrics do not replace the raw
+champion score.
+
+The OCR baseline is intentionally not part of every training run. In a
+separate Colab cell install and run it with:
+
+```python
+!apt-get -qq update
+!apt-get -qq install -y tesseract-ocr tesseract-ocr-rus
+!python -m scripts.ocr_baseline --config configs/baseline.yaml --base-samples 500
+```

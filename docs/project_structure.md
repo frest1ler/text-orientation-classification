@@ -12,34 +12,40 @@ configs/
   baseline.yaml          Validated baseline experiment settings
   efficientnet_b0.yaml   Controlled compact-backbone comparison
 scripts/
+  calibrate.py           OOF calibration evaluation and final fit
   check_config.py        Configuration and device smoke check
   preview_synthetic.py   Local visual check of generated pairs
   sanity_overfit.py      Tiny-set paired learning verification
   smoke_train.py         End-to-end train/checkpoint smoke run
   train.py               Frozen-head and fine-tuning training entry point
   promote_champion.py    Per-model Drive champion promotion
+  ocr_baseline.py        Offline two-orientation Tesseract baseline
 src/
+  calibration.py         Temperature/Platt fitting and OOF selection
   champions.py           Comparable-run fingerprint and champion registry
   config.py              Typed YAML loading and strict validation
   data_audit.py          Immutable ZIP audit from stage 1
   metrics.py             Brier score and diagnostic probability metrics
   models.py              Small CNN and compact pretrained backbones
+  ocr.py                 Tesseract TSV confidence and orientation score
   reproducibility.py     Seeds, DataLoader generator, device selection
   synthetic.py           Deterministic rendering and paired dataset
   text_corpus.py         Split-specific self-contained text sources
   training.py            Single and paired train/evaluation loops
   transforms.py          Aspect-preserving resize and padding
 tests/
+  test_calibration.py
   test_config.py
   test_data_audit.py
+  test_ocr.py
   test_reproducibility.py
   test_synthetic.py
   test_training_pipeline.py
 ```
 
-Modules for calibration, production inference, and submission creation will be
-added only when their respective stages are implemented. Empty placeholder
-modules are deliberately avoided.
+Modules for production inference and submission creation will be added only
+when their respective stages are implemented. Empty placeholder modules are
+deliberately avoided.
 
 ## Configuration policy
 
