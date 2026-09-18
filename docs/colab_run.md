@@ -114,13 +114,17 @@ updates the architecture-specific Drive directory:
 text-orientation-results/
   recovery/
     mobilenet_v3_large/
-      last.pt
-      best.pt
-      status.json
+      quick/
+        last.pt
+        best.pt
+        status.json
+      full/
+        last.pt
+        best.pt
+        status.json
     efficientnet_b0/
-      last.pt
-      best.pt
-      status.json
+      quick/
+      full/
 ```
 
 With `RESUME_TRAINING=True`, a new Colab session resumes at the next epoch.
@@ -132,6 +136,11 @@ Resume intentionally fails when model settings, sample counts, batch sizes,
 epoch budgets, or critical training source files changed. To deliberately
 start a different experiment, choose a new recovery directory or manually
 remove the old architecture recovery after preserving its run archive.
+
+Quick and full runs use separate recovery directories, so a completed smoke
+test can never block or be mistaken for a full training checkpoint. Legacy
+checkpoints directly under `recovery/<model>/` are not migrated automatically
+because their run mode cannot be inferred safely.
 
 Exact bitwise equality is expected only in the same software/hardware runtime;
 across different GPU types the trajectory remains controlled but floating

@@ -145,3 +145,7 @@ python3 -m scripts.train \
 history, and random-generator states. `best.pt` is mirrored separately.
 Resume is refused if the configuration, runtime parameters, or critical
 training source files differ.
+
+The Colab notebook isolates recovery by architecture and run mode:
+`recovery/<model>/quick` and `recovery/<model>/full`. This prevents a quick
+smoke checkpoint from blocking or resuming a full run.
