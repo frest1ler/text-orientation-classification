@@ -17,7 +17,9 @@ scripts/
   sanity_overfit.py      Tiny-set paired learning verification
   smoke_train.py         End-to-end train/checkpoint smoke run
   train.py               Frozen-head and fine-tuning training entry point
+  promote_champion.py    Per-model Drive champion promotion
 src/
+  champions.py           Comparable-run fingerprint and champion registry
   config.py              Typed YAML loading and strict validation
   data_audit.py          Immutable ZIP audit from stage 1
   metrics.py             Brier score and diagnostic probability metrics

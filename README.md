@@ -100,3 +100,8 @@ For the first GPU verification, open `colab_train.ipynb`, keep
 `MODEL="mobilenet"` and `QUICK_RUN=True`, and run all cells on a T4 runtime.
 The exact steps and the result archive to return are documented in
 [docs/colab_run.md](docs/colab_run.md).
+
+Full Colab runs are compared with a separate Google Drive champion for each
+architecture. Checkpoints are promoted by symmetric Brier score only when the
+validation protocol fingerprint matches; quick runs are archived without
+promotion.

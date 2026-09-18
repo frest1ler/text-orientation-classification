@@ -3,6 +3,25 @@
 Experiments are introduced one controlled change at a time and selected by
 validation Brier score.
 
+## Implemented foundation
+
+- Test archive audit and geometry analysis.
+- Strict configuration and reproducibility helpers.
+- Deterministic synthetic train/validation generation.
+- Explicit `x + rot180(x)` paired training and symmetric inference.
+- Small-CNN sanity overfit and checkpoint round-trip.
+- MobileNetV3-Large and EfficientNet-B0 frozen/fine-tuning pipeline.
+- Colab T4 quick-run and artifact export.
+- Per-model Drive champions with validation-protocol fingerprints.
+
+Every architecture owns an independent champion. A run can replace only the
+champion of the same model and only under a comparable validation protocol.
+The checkpoint filename is `<model>_<accuracy>.pt`; promotion is decided by
+symmetric Brier score rather than accuracy. `leaderboard.json` summarises all
+model champions for later cross-model and ensemble comparison.
+
+## Remaining experiments
+
 1. Small paired CNN: pipeline sanity only.
 2. MobileNetV3-Large baseline with fixed synthetic samples.
 3. EfficientNet-B0 under the same split and preprocessing.

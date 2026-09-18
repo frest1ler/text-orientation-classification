@@ -19,6 +19,7 @@ prevents results from depending on a previous Colab session.
    ```python
    MODEL = "mobilenet"
    QUICK_RUN = True
+   PROMOTE_CHAMPION = not QUICK_RUN
    RUN_TESTS = True
    ```
 
@@ -37,7 +38,7 @@ repository root without relying on a manually configured `PYTHONPATH`.
 The final cell prints one path similar to:
 
 ```text
-/content/drive/MyDrive/text-orientation-results/colab_mobilenet_quick.zip
+/content/drive/MyDrive/text-orientation-results/runs/mobilenet_v3_large/colab_mobilenet_quick.zip
 ```
 
 Send that ZIP back unchanged. It contains:
@@ -56,3 +57,29 @@ trace and the output of the GPU/test cell.
 After inspecting this artifact, the next decision is whether to run the full
 MobileNet experiment or first correct the Colab environment/pipeline. The
 EfficientNet run remains disabled until MobileNet succeeds.
+
+## Per-model champions
+
+Quick runs are archived but never promoted. With `QUICK_RUN=False`, the
+default `PROMOTE_CHAMPION=True` compares the completed run with the champion
+of the same architecture. Promotion uses lower symmetric Brier score, then
+lower log loss, higher ROC-AUC, and higher accuracy as tie-breakers.
+
+```text
+text-orientation-results/
+  champions/
+    mobilenet_v3_large/
+      mobilenet_v3_large_<accuracy>.pt
+      champion.json
+    efficientnet_b0/
+      efficientnet_b0_<accuracy>.pt
+      champion.json
+  runs/
+    mobilenet_v3_large/
+    efficientnet_b0/
+  leaderboard.json
+```
+
+Promotion is rejected when validation seed, sample count, synthetic settings,
+generator source, corpus source, or font manifest differ from the existing
+champion. The run ZIP remains available even when it is not promoted.
