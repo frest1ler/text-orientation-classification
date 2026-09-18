@@ -21,6 +21,7 @@ prevents results from depending on a previous Colab session.
    QUICK_RUN = True
    PROMOTE_CHAMPION = not QUICK_RUN
    RUN_CALIBRATION = not QUICK_RUN
+   RESUME_TRAINING = True
    RUN_TESTS = True
    ```
 
@@ -102,3 +103,36 @@ separate Colab cell install and run it with:
 !apt-get -qq install -y tesseract-ocr tesseract-ocr-rus
 !python -m scripts.ocr_baseline --config configs/baseline.yaml --base-samples 500
 ```
+
+## Progress and recovery
+
+Train and validation display a batch progress bar with percentage, speed, ETA,
+and running losses. After every completed epoch, the notebook atomically
+updates the architecture-specific Drive directory:
+
+```text
+text-orientation-results/
+  recovery/
+    mobilenet_v3_large/
+      last.pt
+      best.pt
+      status.json
+    efficientnet_b0/
+      last.pt
+      best.pt
+      status.json
+```
+
+With `RESUME_TRAINING=True`, a new Colab session resumes at the next epoch.
+The loader generator and PyTorch CPU/CUDA RNG states are restored together
+with the optimizer and early-stopping state. A completed recovery is reused
+without repeating training. The checkpoint remains on Drive after success.
+
+Resume intentionally fails when model settings, sample counts, batch sizes,
+epoch budgets, or critical training source files changed. To deliberately
+start a different experiment, choose a new recovery directory or manually
+remove the old architecture recovery after preserving its run archive.
+
+Exact bitwise equality is expected only in the same software/hardware runtime;
+across different GPU types the trajectory remains controlled but floating
+point kernels may still produce small numerical differences.

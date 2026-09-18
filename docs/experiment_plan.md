@@ -16,6 +16,8 @@ validation Brier score.
 - Five-fold OOF comparison of uncalibrated, temperature-scaled, and Platt
   probabilities; the final calibrator is then fitted on all validation data.
 - Offline Tesseract baseline comparing confidence at 0° and 180°.
+- Observable and resumable training with per-batch progress, atomic
+  epoch-boundary recovery, and compatibility checks.
 
 Every architecture owns an independent champion. A run can replace only the
 champion of the same model and only under a comparable validation protocol.
@@ -38,8 +40,14 @@ model champions for later cross-model and ensemble comparison.
    samples.
 9. ~~Offline OCR confidence baseline on both orientations.~~ Implemented as a
    separate Tesseract experiment; execution requires the system OCR packages.
-10. ViT-B/16 after the compact pipeline is stable.
-11. CNN/OCR or CNN/ViT ensemble only if validation Brier improves materially.
+10. ~~Observable and resumable Colab training.~~ Implemented with independent
+    recovery directories for each architecture.
+11. Full EfficientNet-B0 run and compact-model comparison.
+12. Optuna search on the best compact architecture, followed by full-data
+    confirmation of the strongest configurations.
+13. ViT-B/16 after the compact pipeline is stable.
+14. CNN/OCR or CNN/ViT ensemble only if validation Brier improves materially.
+15. Final `test.zip` inference and submission creation.
 
 Epoch-varying augmentation may change brightness, contrast, background,
 resolution, blur, noise, JPEG degradation, small angle, and mild perspective.

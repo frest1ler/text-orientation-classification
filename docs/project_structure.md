@@ -28,6 +28,7 @@ src/
   metrics.py             Brier score and diagnostic probability metrics
   models.py              Small CNN and compact pretrained backbones
   ocr.py                 Tesseract TSV confidence and orientation score
+  recovery.py            Atomic epoch checkpoints and compatibility fingerprint
   reproducibility.py     Seeds, DataLoader generator, device selection
   synthetic.py           Deterministic rendering and paired dataset
   text_corpus.py         Split-specific self-contained text sources
@@ -38,6 +39,7 @@ tests/
   test_config.py
   test_data_audit.py
   test_ocr.py
+  test_recovery.py
   test_reproducibility.py
   test_synthetic.py
   test_training_pipeline.py

@@ -10,6 +10,7 @@ import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 from src.metrics import binary_metrics
 
@@ -83,6 +84,7 @@ def train_paired_epoch(
     device: torch.device,
     symmetry_loss_weight: float,
     amp: bool = True,
+    progress_description: str | None = None,
 ) -> dict[str, float]:
     """Train on explicit orientation pairs using shared model weights."""
     if symmetry_loss_weight < 0:
@@ -93,7 +95,14 @@ def train_paired_epoch(
     scaler = torch.amp.GradScaler(device.type, enabled=use_amp)
     totals = {"loss": 0.0, "classification_loss": 0.0, "symmetry_loss": 0.0}
     sample_count = 0
-    for batch in loader:
+    batches = tqdm(
+        loader,
+        desc=progress_description,
+        unit="batch",
+        leave=False,
+        disable=progress_description is None,
+    )
+    for batch in batches:
         direct = batch["image"].to(device, non_blocking=True)
         rotated = batch["rotated"].to(device, non_blocking=True)
         targets = batch["target"].to(device, dtype=torch.float32, non_blocking=True)
@@ -120,6 +129,11 @@ def train_paired_epoch(
         totals["classification_loss"] += float(classification_loss.detach()) * batch_size
         totals["symmetry_loss"] += float(symmetry_loss.detach()) * batch_size
         sample_count += batch_size
+        batches.set_postfix(
+            loss=f"{totals['loss'] / sample_count:.4f}",
+            classification=f"{totals['classification_loss'] / sample_count:.4f}",
+            symmetry=f"{totals['symmetry_loss'] / sample_count:.4f}",
+        )
     if sample_count == 0:
         raise ValueError("training loader is empty")
     return {name: value / sample_count for name, value in totals.items()}
@@ -127,7 +141,10 @@ def train_paired_epoch(
 
 @torch.inference_mode()
 def predict_paired(
-    model: nn.Module, loader: DataLoader, device: torch.device
+    model: nn.Module,
+    loader: DataLoader,
+    device: torch.device,
+    progress_description: str | None = None,
 ) -> dict[str, np.ndarray]:
     """Collect targets and direct/symmetric probabilities on paired data."""
     model.eval()
@@ -135,7 +152,14 @@ def predict_paired(
     direct_all: list[np.ndarray] = []
     symmetric_all: list[np.ndarray] = []
     symmetry_errors: list[np.ndarray] = []
-    for batch in loader:
+    batches = tqdm(
+        loader,
+        desc=progress_description,
+        unit="batch",
+        leave=False,
+        disable=progress_description is None,
+    )
+    for batch in batches:
         direct = batch["image"].to(device, non_blocking=True)
         rotated = batch["rotated"].to(device, non_blocking=True)
         logits = model(torch.cat((direct, rotated), dim=0))
@@ -161,10 +185,13 @@ def predict_paired(
 
 @torch.inference_mode()
 def evaluate_paired(
-    model: nn.Module, loader: DataLoader, device: torch.device
+    model: nn.Module,
+    loader: DataLoader,
+    device: torch.device,
+    progress_description: str | None = None,
 ) -> dict[str, Any]:
     """Compare direct and symmetry-enforced predictions on paired data."""
-    predictions = predict_paired(model, loader, device)
+    predictions = predict_paired(model, loader, device, progress_description)
     return {
         "direct": binary_metrics(predictions["targets"], predictions["direct"]),
         "symmetric": binary_metrics(predictions["targets"], predictions["symmetric"]),

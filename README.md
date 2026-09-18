@@ -128,3 +128,20 @@ python3 -m scripts.ocr_baseline --config configs/baseline.yaml
 ```
 
 OCR is deliberately separate from CNN training and makes no network/API calls.
+
+## Progress and recovery
+
+Training displays per-batch `tqdm` progress for both train and validation.
+To persist an epoch-boundary recovery checkpoint, use:
+
+```bash
+python3 -m scripts.train \
+  --config configs/baseline.yaml \
+  --recovery-dir /path/to/persistent/recovery/mobilenet_v3_large \
+  --resume
+```
+
+`last.pt` contains the model, optimizer, phase, epoch, early-stopping state,
+history, and random-generator states. `best.pt` is mirrored separately.
+Resume is refused if the configuration, runtime parameters, or critical
+training source files differ.

@@ -12,6 +12,13 @@ from torch.utils.data import DataLoader
 
 from src.config import Config, load_config
 from src.models import build_model, count_parameters, freeze_backbone, unfreeze_model
+from src.recovery import (
+    copy_file_atomic,
+    inspect_recovery,
+    load_recovery,
+    recovery_fingerprint,
+    save_recovery,
+)
 from src.reproducibility import make_generator, seed_everything, seed_worker, select_device
 from src.synthetic import PairedSyntheticDataset
 from src.training import evaluate_paired, save_checkpoint, train_paired_epoch
@@ -30,6 +37,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--frozen-epochs", type=int)
     parser.add_argument("--finetune-epochs", type=int)
     parser.add_argument("--run-name")
+    parser.add_argument("--recovery-dir", type=Path)
+    parser.add_argument("--resume", action="store_true")
     return parser.parse_args()
 
 
@@ -74,11 +83,15 @@ def run_phase(
     history: list[dict[str, Any]],
     best_brier: float,
     patience_used: int,
-) -> tuple[int, float, int, bool]:
+    phase_epoch_start: int = 0,
+    recovery_dir: Path | None = None,
+    recovery_hash: str | None = None,
+) -> tuple[int, float, int, bool, int]:
     """Run one training phase and return updated experiment state."""
     epoch_number = start_epoch
     stopped_early = False
-    for _ in range(epochs):
+    phase_epoch = phase_epoch_start
+    for phase_epoch in range(phase_epoch_start + 1, epochs + 1):
         epoch_number += 1
         losses = train_paired_epoch(
             model,
@@ -87,8 +100,14 @@ def run_phase(
             device,
             symmetry_loss_weight=config.training.symmetry_loss_weight,
             amp=config.training.amp,
+            progress_description=f"{phase} {phase_epoch}/{epochs} train",
         )
-        metrics = evaluate_paired(model, validation_loader, device)
+        metrics = evaluate_paired(
+            model,
+            validation_loader,
+            device,
+            progress_description=f"{phase} {phase_epoch}/{epochs} validation",
+        )
         record = {"epoch": epoch_number, "phase": phase, **losses, **metrics}
         history.append(record)
         print(json.dumps(record, sort_keys=True))
@@ -104,13 +123,33 @@ def run_phase(
                 metrics,
                 config.to_dict(),
             )
+            if recovery_dir is not None:
+                copy_file_atomic(output_dir / "best.pt", recovery_dir / "best.pt")
         else:
             patience_used += 1
         write_json(output_dir / "history.json", history)
+        if recovery_dir is not None:
+            if recovery_hash is None or train_loader.generator is None:
+                raise RuntimeError("recovery requires a fingerprint and DataLoader generator")
+            save_recovery(
+                recovery_dir,
+                model,
+                optimizer,
+                {
+                    "phase": phase,
+                    "epoch": epoch_number,
+                    "phase_epoch": phase_epoch,
+                    "best_brier": best_brier,
+                    "patience_used": patience_used,
+                    "history": history,
+                },
+                recovery_hash,
+                train_loader.generator,
+            )
         if patience_used >= config.validation.early_stopping_patience:
             stopped_early = True
             break
-    return epoch_number, best_brier, patience_used, stopped_early
+    return epoch_number, best_brier, patience_used, stopped_early, phase_epoch
 
 
 def main() -> None:
@@ -185,29 +224,40 @@ def main() -> None:
         config.experiment.seed,
         pin_memory,
     )
-    pretrained = config.model.pretrained and not args.no_pretrained
-    model = build_model(
-        config.model.name, dropout=config.model.dropout, pretrained=pretrained
-    ).to(device)
     run_name = args.run_name or config.experiment.name
     output_dir = Path(config.experiment.output_dir) / run_name
     output_dir.mkdir(parents=True, exist_ok=True)
+    pretrained = config.model.pretrained and not args.no_pretrained
+    runtime = {
+        "pretrained": pretrained,
+        "train_base_samples": train_samples,
+        "validation_base_samples": validation_samples,
+        "num_workers": num_workers,
+        "batch_size": batch_size,
+        "validation_batch_size": validation_batch_size,
+        "frozen_epochs": frozen_epochs,
+        "finetune_epochs": finetune_epochs,
+        "run_name": run_name,
+        "device": str(device),
+    }
     write_json(output_dir / "config.json", config.to_dict())
-    write_json(
-        output_dir / "runtime.json",
-        {
-            "pretrained": pretrained,
-            "train_base_samples": train_samples,
-            "validation_base_samples": validation_samples,
-            "num_workers": num_workers,
-            "batch_size": batch_size,
-            "validation_batch_size": validation_batch_size,
-            "frozen_epochs": frozen_epochs,
-            "finetune_epochs": finetune_epochs,
-            "run_name": run_name,
-            "device": str(device),
-        },
+    write_json(output_dir / "runtime.json", runtime)
+    if args.resume and args.recovery_dir is None:
+        raise ValueError("--resume requires --recovery-dir")
+    recovery_hash = recovery_fingerprint(config.to_dict(), runtime)
+    resume_available = bool(
+        args.resume
+        and args.recovery_dir is not None
+        and (args.recovery_dir / "last.pt").is_file()
     )
+    resume_status = None
+    if resume_available:
+        resume_status = inspect_recovery(args.recovery_dir, recovery_hash)
+    model = build_model(
+        config.model.name,
+        dropout=config.model.dropout,
+        pretrained=pretrained and not resume_available,
+    ).to(device)
     print(
         json.dumps(
             {
@@ -223,6 +273,8 @@ def main() -> None:
                 "frozen_epochs": frozen_epochs,
                 "finetune_epochs": finetune_epochs,
                 "run_name": run_name,
+                "recovery_dir": str(args.recovery_dir) if args.recovery_dir else None,
+                "resume_available": resume_available,
             },
             indent=2,
         )
@@ -232,16 +284,97 @@ def main() -> None:
     epoch = 0
     best_brier = float("inf")
     patience_used = 0
-    if frozen_epochs > 0:
+    resume_phase = resume_status["phase"] if resume_status else None
+    phase_epoch = 0
+
+    if frozen_epochs > 0 and resume_phase != "finetune":
         freeze_backbone(model)
         optimizer = torch.optim.AdamW(
             (parameter for parameter in model.parameters() if parameter.requires_grad),
             lr=config.training.frozen_learning_rate,
             weight_decay=config.training.weight_decay,
         )
-        epoch, best_brier, patience_used, stopped = run_phase(
-            "frozen",
-            frozen_epochs,
+        phase_epoch_start = 0
+        if resume_phase == "frozen":
+            if args.recovery_dir is None or train_loader.generator is None:
+                raise RuntimeError("resume requires a recovery directory and loader generator")
+            restored = load_recovery(
+                args.recovery_dir,
+                model,
+                optimizer,
+                recovery_hash,
+                train_loader.generator,
+                map_location="cpu",
+            )
+            epoch = restored["epoch"]
+            phase_epoch_start = restored["phase_epoch"]
+            best_brier = restored["best_brier"]
+            patience_used = restored["patience_used"]
+            history = restored["history"]
+            write_json(output_dir / "history.json", history)
+            if (args.recovery_dir / "best.pt").is_file():
+                copy_file_atomic(args.recovery_dir / "best.pt", output_dir / "best.pt")
+            if restored["completed"]:
+                print("Recovery checkpoint is already complete; training skipped.")
+                return
+        stopped = patience_used >= config.validation.early_stopping_patience
+        if phase_epoch_start < frozen_epochs and not stopped:
+            epoch, best_brier, patience_used, stopped, phase_epoch = run_phase(
+                "frozen",
+                frozen_epochs,
+                epoch,
+                model,
+                optimizer,
+                train_loader,
+                validation_loader,
+                device,
+                config,
+                output_dir,
+                history,
+                best_brier,
+                patience_used,
+                phase_epoch_start,
+                args.recovery_dir,
+                recovery_hash,
+            )
+        if stopped:
+            print("Early stopping during frozen phase")
+
+    unfreeze_model(model)
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=config.training.finetune_learning_rate,
+        weight_decay=config.training.weight_decay,
+    )
+    patience_used = 0
+    phase_epoch_start = 0
+    if resume_phase == "finetune":
+        if args.recovery_dir is None or train_loader.generator is None:
+            raise RuntimeError("resume requires a recovery directory and loader generator")
+        restored = load_recovery(
+            args.recovery_dir,
+            model,
+            optimizer,
+            recovery_hash,
+            train_loader.generator,
+            map_location="cpu",
+        )
+        epoch = restored["epoch"]
+        phase_epoch_start = restored["phase_epoch"]
+        best_brier = restored["best_brier"]
+        patience_used = restored["patience_used"]
+        history = restored["history"]
+        write_json(output_dir / "history.json", history)
+        if (args.recovery_dir / "best.pt").is_file():
+            copy_file_atomic(args.recovery_dir / "best.pt", output_dir / "best.pt")
+        if restored["completed"]:
+            print("Recovery checkpoint is already complete; training skipped.")
+            return
+    stopped = patience_used >= config.validation.early_stopping_patience
+    if phase_epoch_start < finetune_epochs and not stopped:
+        epoch, best_brier, patience_used, _, phase_epoch = run_phase(
+            "finetune",
+            finetune_epochs,
             epoch,
             model,
             optimizer,
@@ -253,32 +386,31 @@ def main() -> None:
             history,
             best_brier,
             patience_used,
+            phase_epoch_start,
+            args.recovery_dir,
+            recovery_hash,
         )
-        if stopped:
-            print("Early stopping during frozen phase")
-
-    unfreeze_model(model)
-    optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=config.training.finetune_learning_rate,
-        weight_decay=config.training.weight_decay,
-    )
-    patience_used = 0
-    run_phase(
-        "finetune",
-        finetune_epochs,
-        epoch,
-        model,
-        optimizer,
-        train_loader,
-        validation_loader,
-        device,
-        config,
-        output_dir,
-        history,
-        best_brier,
-        patience_used,
-    )
+    else:
+        phase_epoch = phase_epoch_start
+    if args.recovery_dir is not None:
+        if train_loader.generator is None:
+            raise RuntimeError("recovery requires a DataLoader generator")
+        save_recovery(
+            args.recovery_dir,
+            model,
+            optimizer,
+            {
+                "phase": "finetune",
+                "epoch": epoch,
+                "phase_epoch": phase_epoch,
+                "best_brier": best_brier,
+                "patience_used": patience_used,
+                "history": history,
+            },
+            recovery_hash,
+            train_loader.generator,
+            completed=True,
+        )
 
 
 if __name__ == "__main__":
