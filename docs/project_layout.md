@@ -29,6 +29,11 @@ text-orientation/
         contact_sheets/
     recovery/
       <model>/<full|smoke_N>/
+  evaluation/
+    champions/
+      champion_comparison.json
+      champion_comparison.csv
+      champion_comparison.md
   ocr/
     runs/
 ```

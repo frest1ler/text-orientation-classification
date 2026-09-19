@@ -113,6 +113,20 @@ Its `384×96` positional-embedding adaptation is documented in
 and Colab wiring are implemented; the GPU smoke run is still required before
 the model can be treated as an evaluated candidate.
 
+After full candidates have been promoted, create a protocol-safe comparison:
+
+```bash
+python3 -m scripts.compare_champions \
+  --project-dir /path/to/text-orientation \
+  --require-model mobilenet_v3_large \
+  --require-model efficientnet_b0 \
+  --require-model vit_b_16
+```
+
+The command refuses to rank models trained under different validation
+protocols and writes JSON, CSV, and Markdown reports to
+`evaluation/champions/`.
+
 Both use torchvision ImageNet weights, rectangular preprocessing, paired
 training, mixed precision on CUDA, and best-checkpoint selection by symmetric
 Brier score. Details are in

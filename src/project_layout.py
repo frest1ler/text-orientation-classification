@@ -43,6 +43,10 @@ class ProjectLayout:
         return self.root / "inference" / "recovery"
 
     @property
+    def champion_evaluation(self) -> Path:
+        return self.root / "evaluation" / "champions"
+
+    @property
     def ocr_runs(self) -> Path:
         return self.root / "ocr" / "runs"
 
@@ -53,6 +57,7 @@ class ProjectLayout:
             self.training_recovery,
             self.inference_runs,
             self.inference_recovery,
+            self.champion_evaluation,
             self.ocr_runs,
         ):
             path.mkdir(parents=True, exist_ok=True)

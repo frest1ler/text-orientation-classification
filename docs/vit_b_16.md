@@ -61,3 +61,51 @@ recovery round-trip tests exercise the shared serialization mechanism.
 The implementation is ready for a quick T4 run. Only measured GPU memory,
 speed, resume behavior, and validation metrics from that run can justify a
 full ViT experiment. No ViT quality result is claimed before it completes.
+
+## Execution checklist (stages 11–14)
+
+Stage 11 is complete in code: the full local suite and delivery preflight
+validate the rectangular model without downloading pretrained weights.
+
+Stage 12 must run on a Colab T4:
+
+```python
+MODEL = "vit"
+QUICK_RUN = True
+PROMOTE_CHAMPION = False
+RUN_CALIBRATION = False
+RESUME_TRAINING = True
+TRAIN_BATCH_SIZE = None       # 16; use 8 only after a real OOM
+VALIDATION_BATCH_SIZE = None  # 32; use 16 only after a real OOM
+```
+
+The quick ZIP must contain `best.pt`, `history.json`, `runtime.json`,
+`config.json`, `environment.json`, and `colab.log`. Inspect loss, Brier,
+symmetry error, peak memory, and resume before proceeding.
+
+Stage 13 is authorized only after that inspection:
+
+```python
+MODEL = "vit"
+QUICK_RUN = False
+PROMOTE_CHAMPION = True
+RUN_CALIBRATION = True
+RESUME_TRAINING = True
+```
+
+It must produce a calibrated `registry/champions/vit_b_16/` bundle. A quick
+checkpoint must never be copied or promoted as the full champion.
+
+Stage 14 is automated after all desired full champions exist:
+
+```bash
+python3 -m scripts.compare_champions \
+  --project-dir /content/drive/MyDrive/text-orientation \
+  --require-model mobilenet_v3_large \
+  --require-model efficientnet_b0 \
+  --require-model vit_b_16
+```
+
+Ranking uses symmetric Brier, log loss, ROC-AUC, and accuracy in that order.
+The command validates every bundle and refuses comparison when protocol hashes
+differ. Reports are written below `evaluation/champions/`.

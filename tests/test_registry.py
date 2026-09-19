@@ -12,7 +12,9 @@ def write_json(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value), encoding="utf-8")
 
 
-def make_bundle(registry: Path, model: str, brier: float) -> dict:
+def make_bundle(
+    registry: Path, model: str, brier: float, protocol: str = "protocol"
+) -> dict:
     directory = registry / "champions" / model
     directory.mkdir(parents=True)
     checkpoint = directory / f"{model}_0.800000.pt"
@@ -46,7 +48,7 @@ def make_bundle(registry: Path, model: str, brier: float) -> dict:
         "calibration_sha256": file_sha256(calibration),
         "epoch": 4,
         "metrics": metrics,
-        "validation_protocol_sha256": "protocol",
+        "validation_protocol_sha256": protocol,
     }
     write_json(directory / "champion.json", manifest)
     return {
@@ -56,7 +58,7 @@ def make_bundle(registry: Path, model: str, brier: float) -> dict:
         "calibration_sha256": manifest["calibration_sha256"],
         "metrics": metrics,
         "epoch": 4,
-        "validation_protocol_sha256": "protocol",
+        "validation_protocol_sha256": protocol,
     }
 
 
@@ -94,11 +96,26 @@ def test_registry_rejects_modified_checkpoint(tmp_path: Path) -> None:
         select_champion(registry)
 
 
+def test_best_selection_rejects_incomparable_protocols(tmp_path: Path) -> None:
+    registry = tmp_path / "registry"
+    mobile = make_bundle(registry, "mobilenet_v3_large", 0.08, "protocol-a")
+    vit = make_bundle(registry, "vit_b_16", 0.07, "protocol-b")
+    write_json(
+        registry / "leaderboard.json",
+        {"models": {"mobilenet_v3_large": mobile, "vit_b_16": vit}},
+    )
+
+    with pytest.raises(ValueError, match="incompatible validation protocols"):
+        select_champion(registry, "best")
+    assert select_champion(registry, "vit_b_16").model == "vit_b_16"
+
+
 def test_project_layout_and_artifact_sources(tmp_path: Path) -> None:
     layout = ProjectLayout.from_root(tmp_path / "project")
     layout.create_output_directories()
     assert layout.registry.is_dir()
     assert layout.training_runs.is_dir()
+    assert layout.champion_evaluation.is_dir()
     assert resolve_artifact_root(layout.root, "drive") == layout.registry
     upload = tmp_path / "upload"
     assert resolve_artifact_root(layout.root, "upload", upload) == upload

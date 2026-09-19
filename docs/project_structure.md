@@ -18,6 +18,7 @@ configs/
   vit_b_16.yaml          Rectangular pretrained ViT-B/16 candidate
 scripts/
   calibrate.py           OOF calibration evaluation and final fit
+  compare_champions.py    Protocol-safe cross-architecture ranking reports
   import_champion.py     Import a run ZIP into the unified model registry
   infer.py               Resumable symmetric test prediction CLI
   verify_delivery.py     Read-only source and persistent-artifact readiness gate
@@ -30,6 +31,7 @@ scripts/
   ocr_baseline.py        Offline two-orientation Tesseract baseline
 src/
   calibration.py         Temperature/Platt fitting and OOF selection
+  comparison.py          JSON/CSV/Markdown champion comparison
   champions.py           Comparable-run fingerprint and champion registry
   config.py              Typed YAML loading and strict validation
   data_audit.py          Immutable ZIP audit from stage 1

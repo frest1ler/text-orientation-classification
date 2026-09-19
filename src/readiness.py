@@ -25,6 +25,7 @@ REQUIRED_SOURCE_FILES = (
     "configs/vit_b_16.yaml",
     "scripts/train.py",
     "scripts/infer.py",
+    "scripts/compare_champions.py",
 )
 
 

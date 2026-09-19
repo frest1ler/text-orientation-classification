@@ -70,7 +70,8 @@ complete.
 13. ViT-B/16 after the compact pipeline is stable. Model construction,
     rectangular positional embeddings, freezing, configuration, training,
     recovery, registry, Colab, and inference are implemented; smoke/full GPU
-    experiments remain pending.
+    experiments remain pending. Local preflight and automated comparable-model
+    reporting are implemented for stages 11 and 14.
 14. CNN/OCR or CNN/ViT ensemble only if validation Brier improves materially.
 15. ~~Final `test.zip` inference and submission creation.~~ Implemented with
     exact template validation, reports, contact sheets, and a reviewer-facing

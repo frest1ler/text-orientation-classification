@@ -41,6 +41,7 @@ def test_source_delivery_rejects_invalid_notebook(tmp_path: Path) -> None:
         "configs/vit_b_16.yaml",
         "scripts/train.py",
         "scripts/infer.py",
+        "scripts/compare_champions.py",
     ):
         source = PROJECT_ROOT / name
         destination = tmp_path / name

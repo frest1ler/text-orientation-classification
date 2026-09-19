@@ -68,6 +68,9 @@ def _validate_bundle(directory: Path) -> ChampionBundle:
     model = manifest.get("model")
     if not isinstance(model, str) or not model:
         raise ValueError("champion manifest has an invalid model name")
+    protocol = manifest.get("validation_protocol_sha256")
+    if not isinstance(protocol, str) or not protocol:
+        raise ValueError("champion manifest has an invalid validation protocol hash")
     checkpoint_path = directory / manifest["checkpoint"]
     calibration_path = directory / manifest["calibration"]
     if not checkpoint_path.is_file():
@@ -110,6 +113,13 @@ def select_champion(registry_or_bundle: str | Path, model: str = "best") -> Cham
     if not isinstance(models, dict) or not models:
         raise ValueError("leaderboard does not contain any model champions")
     if model == "best":
+        protocols = {
+            record.get("validation_protocol_sha256") for record in models.values()
+        }
+        if len(protocols) != 1:
+            raise ValueError(
+                "cannot select best across incompatible validation protocols"
+            )
         selected = min(
             models,
             key=lambda name: (
