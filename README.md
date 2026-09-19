@@ -23,6 +23,17 @@ Run the current tests with:
 PYTHONPATH=. python3 -m pytest -q
 ```
 
+Validate the source package and both Colab notebooks before delivery:
+
+```bash
+PYTHONPATH=. python3 -m scripts.verify_delivery
+```
+
+With a prepared persistent project, add `--project-dir /path/to/text-orientation`
+to verify the test ZIP, registry, every champion hash, and best-model selection.
+The complete hand-off procedure is in
+[docs/delivery_checklist.md](docs/delivery_checklist.md).
+
 ## Configuration smoke check
 
 The experiment is configured through a strict, validated YAML file. Check the

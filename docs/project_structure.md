@@ -10,7 +10,8 @@ Persistent Drive artifacts follow the portable layout documented in
 ## Current modules
 
 ```text
-colab_train.ipynb       Concise Colab GPU training and artifact export
+colab_train.ipynb        Concise Colab GPU training and artifact export
+colab_inference.ipynb    Reviewer-facing best/named champion inference
 configs/
   baseline.yaml          Validated baseline experiment settings
   efficientnet_b0.yaml   Controlled compact-backbone comparison
@@ -18,6 +19,7 @@ scripts/
   calibrate.py           OOF calibration evaluation and final fit
   import_champion.py     Import a run ZIP into the unified model registry
   infer.py               Resumable symmetric test prediction CLI
+  verify_delivery.py     Read-only source and persistent-artifact readiness gate
   check_config.py        Configuration and device smoke check
   preview_synthetic.py   Local visual check of generated pairs
   sanity_overfit.py      Tiny-set paired learning verification
@@ -34,11 +36,14 @@ src/
   models.py              Small CNN and compact pretrained backbones
   inference.py           Champion loading, test loader, and symmetric batches
   inference_recovery.py  Atomic ordered prediction recovery
+  diagnostics.py         Numeric inference report and visual contact sheets
   ocr.py                 Tesseract TSV confidence and orientation score
   project_layout.py      Canonical persistent project paths and artifact sources
   registry.py            Validated best/named champion bundle selection
   recovery.py            Atomic epoch checkpoints and compatibility fingerprint
+  readiness.py           Notebook, config, ZIP, and registry delivery checks
   test_data.py            Ordered image access directly from test ZIP
+  submission.py          Strict template-preserving submission construction
   reproducibility.py     Seeds, DataLoader generator, device selection
   synthetic.py           Deterministic rendering and paired dataset
   text_corpus.py         Split-specific self-contained text sources
@@ -57,11 +62,11 @@ tests/
   test_reproducibility.py
   test_synthetic.py
   test_training_pipeline.py
+  test_readiness.py
+  test_reviewer_flow.py
+  test_submission.py
+  test_diagnostics.py
 ```
-
-Modules for production inference and submission creation will be added only
-when their respective stages are implemented. Empty placeholder modules are
-deliberately avoided.
 
 ## Configuration policy
 

@@ -33,6 +33,20 @@ The checkpoint filename is `<model>_<accuracy>.pt`; promotion is decided by
 symmetric Brier score rather than accuracy. `leaderboard.json` summarises all
 model champions for later cross-model and ensemble comparison.
 
+## Delivery stages 16–19
+
+16. ~~Add one read-only delivery-readiness command for source, notebooks,
+    test data, registry, and champion integrity.~~
+17. ~~Cover the reviewer path with an end-to-end test from best-model selection
+    through a template-ordered full submission.~~
+18. ~~Run the readiness gate and complete test suite in GitHub Actions.~~
+19. ~~Document the training/inference hand-off and an explicit final
+    pre-submission checklist.~~
+
+These stages make the existing pipeline reviewable; they do not substitute a
+quick run for a full experiment or mark unexecuted Optuna/ViT experiments as
+complete.
+
 ## Remaining experiments
 
 1. Small paired CNN: pipeline sanity only.
