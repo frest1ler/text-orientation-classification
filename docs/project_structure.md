@@ -17,6 +17,7 @@ configs/
 scripts/
   calibrate.py           OOF calibration evaluation and final fit
   import_champion.py     Import a run ZIP into the unified model registry
+  infer.py               Resumable symmetric test prediction CLI
   check_config.py        Configuration and device smoke check
   preview_synthetic.py   Local visual check of generated pairs
   sanity_overfit.py      Tiny-set paired learning verification
@@ -31,6 +32,8 @@ src/
   data_audit.py          Immutable ZIP audit from stage 1
   metrics.py             Brier score and diagnostic probability metrics
   models.py              Small CNN and compact pretrained backbones
+  inference.py           Champion loading, test loader, and symmetric batches
+  inference_recovery.py  Atomic ordered prediction recovery
   ocr.py                 Tesseract TSV confidence and orientation score
   project_layout.py      Canonical persistent project paths and artifact sources
   registry.py            Validated best/named champion bundle selection
@@ -45,6 +48,8 @@ tests/
   test_calibration.py
   test_config.py
   test_data_audit.py
+  test_inference.py
+  test_inference_recovery.py
   test_ocr.py
   test_registry.py
   test_recovery.py

@@ -21,6 +21,8 @@ validation Brier score.
 - Unified persistent project layout and self-contained champion bundles.
 - Validated registry selection for `best`, named, Drive, and uploaded models.
 - Strict ordered access to test images directly inside the ZIP archive.
+- Ordered test DataLoader, validated champion loading, symmetric inference,
+  calibration, and fingerprinted inference recovery.
 
 Every architecture owns an independent champion. A run can replace only the
 champion of the same model and only under a comparable validation protocol.

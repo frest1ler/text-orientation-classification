@@ -165,3 +165,19 @@ text-orientation/
 See [docs/project_layout.md](docs/project_layout.md) for the complete layout
 and the non-destructive command that imports an existing full run ZIP into the
 self-contained registry.
+
+## Resumable test inference
+
+Generate ordered direct, rotated, symmetric, and calibrated predictions from
+the best registered champion:
+
+```bash
+python3 -m scripts.infer \
+  --project-dir /path/to/text-orientation \
+  --model best
+```
+
+The command validates the complete bundle, reads images directly from
+`data/test.zip`, and resumes through fingerprinted atomic state. See
+[docs/inference_pipeline.md](docs/inference_pipeline.md). Final submission and
+diagnostic report generation are intentionally handled by the next stages.
