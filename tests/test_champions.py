@@ -72,6 +72,19 @@ def make_run(
     write_json(run_dir / "runtime.json", runtime)
     write_json(run_dir / "history.json", [history_record])
     write_json(run_dir / "environment.json", {"git_commit": "test", "gpu": "cpu"})
+    write_json(
+        run_dir / "calibration.json",
+        {
+            "checkpoint_epoch": 2,
+            "prediction_mode": "symmetric",
+            "selected_method": "temperature",
+            "final_calibrator": {
+                "method": "temperature",
+                "slope": 0.8,
+                "intercept": 0.0,
+            },
+        },
+    )
     return run_dir
 
 
@@ -87,6 +100,8 @@ def test_first_candidate_becomes_model_champion(tmp_path: Path) -> None:
     )
     assert champion["checkpoint"] == "mobilenet_v3_large_0.700000.pt"
     assert (registry / "champions/mobilenet_v3_large" / champion["checkpoint"]).is_file()
+    assert (registry / "champions/mobilenet_v3_large/calibration.json").is_file()
+    assert champion["calibration"] == "calibration.json"
     assert json.loads((registry / "leaderboard.json").read_text())["models"]
 
 
@@ -131,3 +146,23 @@ def test_incompatible_validation_does_not_replace_champion(tmp_path: Path) -> No
         (registry / "champions/mobilenet_v3_large/champion.json").read_text()
     )
     assert champion["checkpoint"] == "mobilenet_v3_large_0.700000.pt"
+
+
+def test_same_run_repairs_legacy_bundle_without_calibration(tmp_path: Path) -> None:
+    registry = tmp_path / "registry"
+    run = make_run(tmp_path, "first", brier=0.20, accuracy=0.70)
+    promote_champion(run, registry)
+    model_dir = registry / "champions/mobilenet_v3_large"
+    manifest_path = model_dir / "champion.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest.pop("calibration")
+    manifest.pop("calibration_sha256")
+    write_json(manifest_path, manifest)
+    (model_dir / "calibration.json").unlink()
+
+    result = promote_champion(run, registry)
+
+    repaired = json.loads(manifest_path.read_text())
+    assert result["status"] == "promoted"
+    assert repaired["calibration"] == "calibration.json"
+    assert (model_dir / "calibration.json").is_file()

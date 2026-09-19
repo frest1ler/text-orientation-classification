@@ -11,6 +11,8 @@
 /runs/
 /wandb/
 /artifacts/experiments/
+/champion.json
+/leaderboard.json
 
 # Locally generated data-audit details (contain test-derived records/images)
 /artifacts/data_audit/image_metadata.csv

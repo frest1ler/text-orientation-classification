@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -76,7 +77,14 @@ def _safe_model_name(name: str) -> str:
 
 
 def _load_candidate(run_dir: Path) -> dict[str, Any]:
-    required = ("best.pt", "config.json", "runtime.json", "history.json", "environment.json")
+    required = (
+        "best.pt",
+        "calibration.json",
+        "config.json",
+        "runtime.json",
+        "history.json",
+        "environment.json",
+    )
     missing = [name for name in required if not (run_dir / name).is_file()]
     if missing:
         raise FileNotFoundError(f"Run directory is missing required files: {missing}")
@@ -84,6 +92,7 @@ def _load_candidate(run_dir: Path) -> dict[str, Any]:
     runtime = _read_json(run_dir / "runtime.json")
     history = _read_json(run_dir / "history.json")
     environment = _read_json(run_dir / "environment.json")
+    calibration = _read_json(run_dir / "calibration.json")
     checkpoint = torch.load(run_dir / "best.pt", map_location="cpu", weights_only=True)
     if not history:
         raise ValueError("history.json is empty")
@@ -96,12 +105,30 @@ def _load_candidate(run_dir: Path) -> dict[str, Any]:
         if key not in {"epoch", "phase", "loss", "classification_loss", "symmetry_loss"}
     }:
         raise ValueError("checkpoint metrics do not match best history metrics")
+    if calibration.get("checkpoint_epoch") != checkpoint["epoch"]:
+        raise ValueError("calibration checkpoint epoch does not match best checkpoint")
+    if calibration.get("prediction_mode") != "symmetric":
+        raise ValueError("calibration must be fitted on symmetric predictions")
+    final_calibrator = calibration.get("final_calibrator")
+    if not isinstance(final_calibrator, dict) or final_calibrator.get("method") not in {
+        "uncalibrated",
+        "temperature",
+        "platt",
+    }:
+        raise ValueError("calibration method is unsupported")
+    if not all(
+        isinstance(final_calibrator.get(key), (int, float))
+        and math.isfinite(final_calibrator[key])
+        for key in ("slope", "intercept")
+    ):
+        raise ValueError("calibration parameters must be finite")
     protocol_hash, protocol = validation_protocol(config, runtime)
     return {
         "config": config,
         "runtime": runtime,
         "environment": environment,
         "checkpoint": checkpoint,
+        "calibration": calibration,
         "protocol_hash": protocol_hash,
         "protocol": protocol,
     }
@@ -115,6 +142,9 @@ def _refresh_leaderboard(registry_dir: Path) -> dict[str, Any]:
             manifest = _read_json(manifest_path)
             models[manifest["model"]] = {
                 "checkpoint": manifest["checkpoint"],
+                "checkpoint_sha256": manifest["checkpoint_sha256"],
+                "calibration": manifest["calibration"],
+                "calibration_sha256": manifest["calibration_sha256"],
                 "metrics": manifest["metrics"],
                 "epoch": manifest["epoch"],
                 "validation_protocol_sha256": manifest["validation_protocol_sha256"],
@@ -137,6 +167,7 @@ def promote_champion(run_dir: str | Path, registry_dir: str | Path) -> dict[str,
     model_dir = registry_dir / "champions" / model_name
     manifest_path = model_dir / "champion.json"
     existing = _read_json(manifest_path) if manifest_path.is_file() else None
+    candidate_checkpoint_hash = _file_sha256(run_dir / "best.pt")
 
     if existing is not None and (
         existing["validation_protocol_sha256"] != candidate["protocol_hash"]
@@ -147,7 +178,26 @@ def promote_champion(run_dir: str | Path, registry_dir: str | Path) -> dict[str,
             "candidate_protocol": candidate["protocol_hash"],
             "champion_protocol": existing["validation_protocol_sha256"],
         }
-    if existing is not None and _ranking_key(metrics) >= _ranking_key(existing["metrics"]):
+    existing_complete = False
+    if existing is not None and all(
+        key in existing
+        for key in ("calibration", "calibration_sha256", "checkpoint_sha256")
+    ):
+        existing_checkpoint = model_dir / existing["checkpoint"]
+        existing_calibration = model_dir / existing["calibration"]
+        existing_complete = (
+            existing_checkpoint.is_file()
+            and existing_calibration.is_file()
+            and _file_sha256(existing_checkpoint) == existing["checkpoint_sha256"]
+            and _file_sha256(existing_calibration) == existing["calibration_sha256"]
+        )
+    if existing is not None and not existing_complete and (
+        existing.get("checkpoint_sha256") != candidate_checkpoint_hash
+    ):
+        raise ValueError(
+            "existing champion bundle is incomplete and cannot be repaired from a different run"
+        )
+    if existing_complete and _ranking_key(metrics) >= _ranking_key(existing["metrics"]):
         return {
             "status": "kept_existing",
             "model": model_name,
@@ -161,10 +211,17 @@ def promote_champion(run_dir: str | Path, registry_dir: str | Path) -> dict[str,
     temporary = model_dir / f".{checkpoint_name}.tmp"
     shutil.copy2(run_dir / "best.pt", temporary)
     os.replace(temporary, destination)
+    calibration_name = "calibration.json"
+    calibration_destination = model_dir / calibration_name
+    calibration_temporary = model_dir / f".{calibration_name}.tmp"
+    shutil.copy2(run_dir / calibration_name, calibration_temporary)
+    os.replace(calibration_temporary, calibration_destination)
     manifest = {
         "model": model_name,
         "checkpoint": checkpoint_name,
-        "checkpoint_sha256": _file_sha256(destination),
+        "checkpoint_sha256": candidate_checkpoint_hash,
+        "calibration": calibration_name,
+        "calibration_sha256": _file_sha256(calibration_destination),
         "epoch": candidate["checkpoint"]["epoch"],
         "metrics": metrics,
         "validation_protocol_sha256": candidate["protocol_hash"],

@@ -4,6 +4,9 @@ The project is a new implementation tailored to binary text-orientation
 classification. It does not reuse code, models, configuration, or checkpoints
 from `vision_classifier_pipeline`.
 
+Persistent Drive artifacts follow the portable layout documented in
+[project_layout.md](project_layout.md).
+
 ## Current modules
 
 ```text
@@ -13,6 +16,7 @@ configs/
   efficientnet_b0.yaml   Controlled compact-backbone comparison
 scripts/
   calibrate.py           OOF calibration evaluation and final fit
+  import_champion.py     Import a run ZIP into the unified model registry
   check_config.py        Configuration and device smoke check
   preview_synthetic.py   Local visual check of generated pairs
   sanity_overfit.py      Tiny-set paired learning verification
@@ -28,7 +32,10 @@ src/
   metrics.py             Brier score and diagnostic probability metrics
   models.py              Small CNN and compact pretrained backbones
   ocr.py                 Tesseract TSV confidence and orientation score
+  project_layout.py      Canonical persistent project paths and artifact sources
+  registry.py            Validated best/named champion bundle selection
   recovery.py            Atomic epoch checkpoints and compatibility fingerprint
+  test_data.py            Ordered image access directly from test ZIP
   reproducibility.py     Seeds, DataLoader generator, device selection
   synthetic.py           Deterministic rendering and paired dataset
   text_corpus.py         Split-specific self-contained text sources
@@ -39,7 +46,9 @@ tests/
   test_config.py
   test_data_audit.py
   test_ocr.py
+  test_registry.py
   test_recovery.py
+  test_test_data.py
   test_reproducibility.py
   test_synthetic.py
   test_training_pipeline.py

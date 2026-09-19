@@ -23,9 +23,11 @@ prevents results from depending on a previous Colab session.
    RUN_CALIBRATION = not QUICK_RUN
    RESUME_TRAINING = True
    RUN_TESTS = True
+   PROJECT_DIR = "/content/drive/MyDrive/text-orientation"
    ```
 
-4. Set `DRIVE_OUTPUT_DIR` if the default Drive folder is unsuitable.
+4. Set `PROJECT_DIR` if the default Drive folder is unsuitable. All persistent
+   data and results live below this one directory.
 5. Run all cells from top to bottom.
 
 The quick run uses official pretrained weights, 2,048 train pairs, 512
@@ -40,7 +42,7 @@ repository root without relying on a manually configured `PYTHONPATH`.
 The final cell prints one path similar to:
 
 ```text
-/content/drive/MyDrive/text-orientation-results/runs/mobilenet_v3_large/colab_mobilenet_quick.zip
+/content/drive/MyDrive/text-orientation/training/runs/mobilenet_v3_large/quick/colab_mobilenet_quick.zip
 ```
 
 Send that ZIP back unchanged. It contains:
@@ -68,18 +70,28 @@ of the same architecture. Promotion uses lower symmetric Brier score, then
 lower log loss, higher ROC-AUC, and higher accuracy as tie-breakers.
 
 ```text
-text-orientation-results/
-  champions/
-    mobilenet_v3_large/
-      mobilenet_v3_large_<accuracy>.pt
-      champion.json
-    efficientnet_b0/
-      efficientnet_b0_<accuracy>.pt
-      champion.json
-  runs/
-    mobilenet_v3_large/
-    efficientnet_b0/
-  leaderboard.json
+text-orientation/
+  data/
+    test.zip
+  registry/
+    leaderboard.json
+    champions/
+      mobilenet_v3_large/
+        mobilenet_v3_large_<accuracy>.pt
+        calibration.json
+        champion.json
+      efficientnet_b0/
+        efficientnet_b0_<accuracy>.pt
+        calibration.json
+        champion.json
+  training/
+    runs/
+    recovery/
+  inference/
+    runs/
+    recovery/
+  ocr/
+    runs/
 ```
 
 Promotion is rejected when validation seed, sample count, synthetic settings,
@@ -111,20 +123,21 @@ and running losses. After every completed epoch, the notebook atomically
 updates the architecture-specific Drive directory:
 
 ```text
-text-orientation-results/
-  recovery/
-    mobilenet_v3_large/
-      quick/
-        last.pt
-        best.pt
-        status.json
-      full/
-        last.pt
-        best.pt
-        status.json
-    efficientnet_b0/
-      quick/
-      full/
+text-orientation/
+  training/
+    recovery/
+      mobilenet_v3_large/
+        quick/
+          last.pt
+          best.pt
+          status.json
+        full/
+          last.pt
+          best.pt
+          status.json
+      efficientnet_b0/
+        quick/
+        full/
 ```
 
 With `RESUME_TRAINING=True`, a new Colab session resumes at the next epoch.
@@ -139,8 +152,8 @@ remove the old architecture recovery after preserving its run archive.
 
 Quick and full runs use separate recovery directories, so a completed smoke
 test can never block or be mistaken for a full training checkpoint. Legacy
-checkpoints directly under `recovery/<model>/` are not migrated automatically
-because their run mode cannot be inferred safely.
+checkpoints directly under the legacy `recovery/<model>/` are not migrated
+automatically because their run mode cannot be inferred safely.
 
 Exact bitwise equality is expected only in the same software/hardware runtime;
 across different GPU types the trajectory remains controlled but floating

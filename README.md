@@ -137,7 +137,7 @@ To persist an epoch-boundary recovery checkpoint, use:
 ```bash
 python3 -m scripts.train \
   --config configs/baseline.yaml \
-  --recovery-dir /path/to/persistent/recovery/mobilenet_v3_large \
+  --recovery-dir /path/to/project/training/recovery/mobilenet_v3_large/full \
   --resume
 ```
 
@@ -146,6 +146,22 @@ history, and random-generator states. `best.pt` is mirrored separately.
 Resume is refused if the configuration, runtime parameters, or critical
 training source files differ.
 
-The Colab notebook isolates recovery by architecture and run mode:
-`recovery/<model>/quick` and `recovery/<model>/full`. This prevents a quick
-smoke checkpoint from blocking or resuming a full run.
+The Colab notebook stores every persistent artifact below one `PROJECT_DIR`
+and isolates recovery by architecture and run mode:
+`training/recovery/<model>/quick` and `training/recovery/<model>/full`. This
+prevents a quick smoke checkpoint from blocking or resuming a full run.
+
+The canonical persistent layout is:
+
+```text
+text-orientation/
+  data/
+  registry/
+  training/
+  inference/
+  ocr/
+```
+
+See [docs/project_layout.md](docs/project_layout.md) for the complete layout
+and the non-destructive command that imports an existing full run ZIP into the
+self-contained registry.

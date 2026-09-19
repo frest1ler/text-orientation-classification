@@ -18,6 +18,9 @@ validation Brier score.
 - Offline Tesseract baseline comparing confidence at 0° and 180°.
 - Observable and resumable training with per-batch progress, atomic
   epoch-boundary recovery, and compatibility checks.
+- Unified persistent project layout and self-contained champion bundles.
+- Validated registry selection for `best`, named, Drive, and uploaded models.
+- Strict ordered access to test images directly inside the ZIP archive.
 
 Every architecture owns an independent champion. A run can replace only the
 champion of the same model and only under a comparable validation protocol.
