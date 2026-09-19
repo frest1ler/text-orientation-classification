@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import math
+from collections import OrderedDict
+from functools import partial
+
 import torch
 from torch import nn
+from torch.nn import functional as F
 from torchvision.models import (
     EfficientNet_B0_Weights,
     MobileNet_V3_Large_Weights,
+    ViT_B_16_Weights,
+    VisionTransformer,
     efficientnet_b0,
     mobilenet_v3_large,
 )
@@ -58,7 +65,106 @@ class BinaryLinear(nn.Linear):
         return super().forward(features).squeeze(-1)
 
 
-def build_model(name: str, dropout: float = 0.2, pretrained: bool = False) -> nn.Module:
+class RectangularVisionTransformer(VisionTransformer):
+    """Torchvision ViT-B/16 with a fixed rectangular patch grid."""
+
+    def __init__(self, image_height: int, image_width: int, dropout: float = 0.0):
+        patch_size = 16
+        if image_height % patch_size or image_width % patch_size:
+            raise ValueError("ViT input dimensions must be divisible by patch size 16")
+        super().__init__(
+            image_size=image_height,
+            patch_size=patch_size,
+            num_layers=12,
+            num_heads=12,
+            hidden_dim=768,
+            mlp_dim=3072,
+            dropout=dropout,
+            attention_dropout=0.0,
+            num_classes=1000,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        )
+        self.image_height = image_height
+        self.image_width = image_width
+        token_count = (image_height // patch_size) * (image_width // patch_size) + 1
+        self.encoder.pos_embedding = nn.Parameter(
+            torch.empty(1, token_count, self.hidden_dim).normal_(std=0.02)
+        )
+
+    def _process_input(self, images: torch.Tensor) -> torch.Tensor:
+        batch, _, height, width = images.shape
+        torch._assert(
+            height == self.image_height,
+            f"Wrong image height! Expected {self.image_height} but got {height}!",
+        )
+        torch._assert(
+            width == self.image_width,
+            f"Wrong image width! Expected {self.image_width} but got {width}!",
+        )
+        patches = self.conv_proj(images)
+        patches = patches.reshape(batch, self.hidden_dim, -1)
+        return patches.permute(0, 2, 1)
+
+
+def interpolate_vit_positional_embedding(
+    state_dict: dict[str, torch.Tensor],
+    target_height: int,
+    target_width: int,
+    patch_size: int = 16,
+) -> OrderedDict[str, torch.Tensor]:
+    """Resize square pretrained patch positions while preserving the CLS token."""
+    if target_height % patch_size or target_width % patch_size:
+        raise ValueError("ViT target dimensions must be divisible by patch size")
+    result = OrderedDict(state_dict)
+    positional = result["encoder.pos_embedding"]
+    if positional.ndim != 3 or positional.shape[0] != 1:
+        raise ValueError(f"Unexpected position embedding shape: {positional.shape}")
+    cls_position, patch_positions = positional[:, :1], positional[:, 1:]
+    source_side = math.isqrt(patch_positions.shape[1])
+    if source_side * source_side != patch_positions.shape[1]:
+        raise ValueError("pretrained ViT patch positions do not form a square grid")
+    target_grid = (target_height // patch_size, target_width // patch_size)
+    patch_positions = patch_positions.permute(0, 2, 1).reshape(
+        1, positional.shape[2], source_side, source_side
+    )
+    patch_positions = F.interpolate(
+        patch_positions,
+        size=target_grid,
+        mode="bicubic",
+        align_corners=True,
+    )
+    patch_positions = patch_positions.flatten(2).permute(0, 2, 1)
+    result["encoder.pos_embedding"] = torch.cat(
+        (cls_position, patch_positions), dim=1
+    )
+    return result
+
+
+def _build_vit_b_16(
+    dropout: float,
+    pretrained: bool,
+    input_height: int,
+    input_width: int,
+) -> RectangularVisionTransformer:
+    model = RectangularVisionTransformer(input_height, input_width, dropout)
+    if pretrained:
+        weights = ViT_B_16_Weights.DEFAULT
+        state_dict = weights.get_state_dict(progress=True, check_hash=True)
+        state_dict = interpolate_vit_positional_embedding(
+            state_dict, input_height, input_width
+        )
+        model.load_state_dict(state_dict)
+    model.heads.head = BinaryLinear(model.heads.head.in_features)
+    return model
+
+
+def build_model(
+    name: str,
+    dropout: float = 0.2,
+    pretrained: bool = False,
+    input_height: int = 224,
+    input_width: int = 224,
+) -> nn.Module:
     """Construct a model available at the current implementation stage."""
     if name == "small_cnn":
         return SmallOrientationCNN(dropout=dropout)
@@ -72,6 +178,10 @@ def build_model(name: str, dropout: float = 0.2, pretrained: bool = False) -> nn
         model = efficientnet_b0(weights=weights, dropout=dropout)
         model.classifier[-1] = BinaryLinear(model.classifier[-1].in_features)
         return model
+    if name == "vit_b_16":
+        return _build_vit_b_16(
+            dropout, pretrained, input_height, input_width
+        )
     raise ValueError(f"Model '{name}' is configured but not implemented at this stage")
 
 
@@ -83,14 +193,16 @@ def count_parameters(model: nn.Module, trainable_only: bool = False) -> int:
 
 
 def freeze_backbone(model: nn.Module) -> None:
-    """Freeze a torchvision feature extractor while keeping its head trainable."""
+    """Freeze a CNN/ViT backbone while keeping only its binary head trainable."""
     features = getattr(model, "features", None)
     classifier = getattr(model, "classifier", None)
-    if features is None or classifier is None:
-        raise ValueError("Model does not expose torchvision-style features/classifier")
-    for parameter in features.parameters():
+    heads = getattr(model, "heads", None)
+    head = classifier if classifier is not None else heads
+    if head is None or (features is None and heads is None):
+        raise ValueError("Model does not expose a supported classification head")
+    for parameter in model.parameters():
         parameter.requires_grad = False
-    for parameter in classifier.parameters():
+    for parameter in head.parameters():
         parameter.requires_grad = True
 
 

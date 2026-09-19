@@ -54,7 +54,13 @@ def main() -> None:
     checkpoint = torch.load(args.run_dir / "best.pt", map_location="cpu", weights_only=True)
     if checkpoint["config"] != config.to_dict():
         raise ValueError("checkpoint config does not match --config")
-    model = build_model(config.model.name, dropout=config.model.dropout, pretrained=False)
+    model = build_model(
+        config.model.name,
+        dropout=config.model.dropout,
+        pretrained=False,
+        input_height=config.model.input_height,
+        input_width=config.model.input_width,
+    )
     model.load_state_dict(checkpoint["model_state"])
     model.to(device)
     predictions = predict_paired(model, loader, device)

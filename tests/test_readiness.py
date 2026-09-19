@@ -13,7 +13,11 @@ def test_source_delivery_is_ready() -> None:
     result = verify_source(PROJECT_ROOT)
 
     assert result["status"] == "ready"
-    assert set(result["configs"]) == {"mobilenet_v3_large", "efficientnet_b0"}
+    assert set(result["configs"]) == {
+        "mobilenet_v3_large",
+        "efficientnet_b0",
+        "vit_b_16",
+    }
     assert {Path(item["path"]).name for item in result["notebooks"]} == {
         "colab_train.ipynb",
         "colab_inference.ipynb",
@@ -28,6 +32,7 @@ def test_source_delivery_rejects_invalid_notebook(tmp_path: Path) -> None:
         "colab_inference.ipynb",
         "configs/baseline.yaml",
         "configs/efficientnet_b0.yaml",
+        "configs/vit_b_16.yaml",
         "scripts/train.py",
         "scripts/infer.py",
     ):

@@ -9,6 +9,7 @@ from src.config import load_config
 
 CONFIG_PATH = Path("configs/baseline.yaml")
 EFFICIENTNET_CONFIG_PATH = Path("configs/efficientnet_b0.yaml")
+VIT_CONFIG_PATH = Path("configs/vit_b_16.yaml")
 
 
 def read_raw_config() -> dict:
@@ -36,6 +37,15 @@ def test_efficientnet_config_is_valid() -> None:
 
     assert config.model.name == "efficientnet_b0"
     assert config.experiment.name == "efficientnet_b0_384x96"
+
+
+def test_vit_config_uses_rectangular_patch_grid_and_smaller_batch() -> None:
+    config = load_config(VIT_CONFIG_PATH)
+
+    assert config.model.name == "vit_b_16"
+    assert (config.model.input_height, config.model.input_width) == (96, 384)
+    assert config.training.batch_size == 16
+    assert config.training.finetune_learning_rate == pytest.approx(3e-5)
 
 
 def test_unknown_key_is_rejected(tmp_path: Path) -> None:

@@ -52,6 +52,8 @@ def load_champion(bundle: ChampionBundle, device: torch.device) -> LoadedChampio
         bundle.model,
         dropout=float(model_config["dropout"]),
         pretrained=False,
+        input_height=int(model_config["input_height"]),
+        input_width=int(model_config["input_width"]),
     )
     model.load_state_dict(checkpoint["model_state"])
     model.to(device).eval()

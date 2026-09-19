@@ -1,7 +1,13 @@
 import pytest
 import torch
 
-from src.models import build_model, count_parameters, freeze_backbone, unfreeze_model
+from src.models import (
+    build_model,
+    count_parameters,
+    freeze_backbone,
+    interpolate_vit_positional_embedding,
+    unfreeze_model,
+)
 from src.transforms import IMAGENET_MEAN, IMAGENET_STD, build_preprocess
 
 
@@ -43,3 +49,37 @@ def test_pretrained_models_use_imagenet_normalization() -> None:
 
     assert transform.mean == IMAGENET_MEAN
     assert transform.std == IMAGENET_STD
+
+
+def test_rectangular_vit_forward_and_freezing() -> None:
+    model = build_model(
+        "vit_b_16",
+        dropout=0.1,
+        pretrained=False,
+        input_height=96,
+        input_width=384,
+    )
+    model.eval()
+    with torch.inference_mode():
+        logits = model(torch.zeros(1, 3, 96, 384))
+
+    assert logits.shape == (1,)
+    assert model.encoder.pos_embedding.shape == (1, 145, 768)
+    assert 85_000_000 < count_parameters(model) < 87_000_000
+    freeze_backbone(model)
+    assert all(parameter.requires_grad for parameter in model.heads.parameters())
+    assert count_parameters(model, trainable_only=True) == 769
+    unfreeze_model(model)
+    assert all(parameter.requires_grad for parameter in model.parameters())
+
+
+def test_vit_position_interpolation_preserves_cls_and_targets_24_by_6_grid() -> None:
+    positional = torch.arange(197 * 4, dtype=torch.float32).reshape(1, 197, 4)
+    result = interpolate_vit_positional_embedding(
+        {"encoder.pos_embedding": positional},
+        target_height=96,
+        target_width=384,
+    )
+
+    assert result["encoder.pos_embedding"].shape == (1, 145, 4)
+    assert torch.equal(result["encoder.pos_embedding"][:, :1], positional[:, :1])

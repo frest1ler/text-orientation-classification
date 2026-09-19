@@ -15,6 +15,7 @@ colab_inference.ipynb    Reviewer-facing best/named champion inference
 configs/
   baseline.yaml          Validated baseline experiment settings
   efficientnet_b0.yaml   Controlled compact-backbone comparison
+  vit_b_16.yaml          Rectangular pretrained ViT-B/16 candidate
 scripts/
   calibrate.py           OOF calibration evaluation and final fit
   import_champion.py     Import a run ZIP into the unified model registry

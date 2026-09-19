@@ -22,6 +22,7 @@ REQUIRED_SOURCE_FILES = (
     "colab_inference.ipynb",
     "configs/baseline.yaml",
     "configs/efficientnet_b0.yaml",
+    "configs/vit_b_16.yaml",
     "scripts/train.py",
     "scripts/infer.py",
 )
@@ -48,7 +49,11 @@ def verify_source(source_root: str | Path) -> dict[str, Any]:
     if missing:
         raise FileNotFoundError(f"required delivery files are missing: {missing}")
     configs = {}
-    for name in ("configs/baseline.yaml", "configs/efficientnet_b0.yaml"):
+    for name in (
+        "configs/baseline.yaml",
+        "configs/efficientnet_b0.yaml",
+        "configs/vit_b_16.yaml",
+    ):
         config = load_config(root / name)
         configs[config.model.name] = name
     notebooks = [

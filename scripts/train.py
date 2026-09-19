@@ -155,8 +155,8 @@ def run_phase(
 def main() -> None:
     args = parse_args()
     config = load_config(args.config)
-    if config.model.name not in {"mobilenet_v3_large", "efficientnet_b0"}:
-        raise ValueError("scripts/train.py currently supports compact pretrained CNNs only")
+    if config.model.name not in {"mobilenet_v3_large", "efficientnet_b0", "vit_b_16"}:
+        raise ValueError("scripts/train.py received an unsupported trainable model")
     seed_everything(config.experiment.seed, config.training.deterministic)
     device = select_device()
     preprocess = build_preprocess(
@@ -257,6 +257,8 @@ def main() -> None:
         config.model.name,
         dropout=config.model.dropout,
         pretrained=pretrained and not resume_available,
+        input_height=config.model.input_height,
+        input_width=config.model.input_width,
     ).to(device)
     print(
         json.dumps(

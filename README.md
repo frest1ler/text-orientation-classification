@@ -102,6 +102,17 @@ Run the controlled EfficientNet-B0 comparison:
 PYTHONPATH=. python3 scripts/train.py --config configs/efficientnet_b0.yaml
 ```
 
+The rectangular ViT-B/16 foundation and configuration are also available:
+
+```bash
+PYTHONPATH=. python3 scripts/train.py --config configs/vit_b_16.yaml
+```
+
+Its `384×96` positional-embedding adaptation is documented in
+[docs/vit_b_16.md](docs/vit_b_16.md). Colab wiring and the GPU smoke run remain
+the next ViT stages; the model should not yet be treated as an evaluated
+champion.
+
 Both use torchvision ImageNet weights, rectangular preprocessing, paired
 training, mixed precision on CUDA, and best-checkpoint selection by symmetric
 Brier score. Details are in
