@@ -17,10 +17,12 @@ def make_run(
     brier: float,
     accuracy: float,
     validation_samples: int = 512,
+    model_name: str = "mobilenet_v3_large",
 ) -> Path:
     run_dir = root / name
     run_dir.mkdir()
     config = load_config("configs/baseline.yaml").to_dict()
+    config["model"]["name"] = model_name
     runtime = {
         "pretrained": True,
         "train_base_samples": 2048,
@@ -166,3 +168,24 @@ def test_same_run_repairs_legacy_bundle_without_calibration(tmp_path: Path) -> N
     assert result["status"] == "promoted"
     assert repaired["calibration"] == "calibration.json"
     assert (model_dir / "calibration.json").is_file()
+
+
+def test_vit_owns_an_independent_champion(tmp_path: Path) -> None:
+    registry = tmp_path / "registry"
+    mobile = make_run(tmp_path, "mobile", brier=0.20, accuracy=0.70)
+    vit = make_run(
+        tmp_path,
+        "vit",
+        brier=0.16,
+        accuracy=0.76,
+        model_name="vit_b_16",
+    )
+
+    promote_champion(mobile, registry)
+    result = promote_champion(vit, registry)
+
+    assert result["status"] == "promoted"
+    assert result["model"] == "vit_b_16"
+    leaderboard = json.loads((registry / "leaderboard.json").read_text())
+    assert set(leaderboard["models"]) == {"mobilenet_v3_large", "vit_b_16"}
+    assert (registry / "champions/vit_b_16/calibration.json").is_file()

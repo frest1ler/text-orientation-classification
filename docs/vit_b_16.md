@@ -31,10 +31,33 @@ other pretrained parameters are loaded strictly before replacing the
 Frozen training leaves only 769 head parameters trainable. Fine-tuning uses
 the existing complete-model unfreeze operation.
 
+## Training, registry, and inference (stages 6–10)
+
+The standard training phases, AMP, symmetry loss, epoch recovery, calibration,
+and early stopping are shared with the CNN candidates. Recovery is isolated at
+`training/recovery/vit_b_16/<quick|full>`.
+
+`colab_train.ipynb` accepts `MODEL="vit"`. A quick run uses batch sizes 16/32;
+full runs read the same values from the ViT config. CUDA OOM is reported with
+an explicit 8/16 fallback suggestion but batch size is never changed silently.
+A calibrated full run may promote only `registry/champions/vit_b_16/`, while
+the global `best` selector continues to compare all independent champions by
+the locked symmetric Brier protocol.
+
+Inference reconstructs the rectangular dimensions from the champion
+checkpoint. When no command-line batch override is supplied, it uses the
+selected champion's own inference batch size, so `MODEL="best"` remains safe
+if ViT wins. Direct/rotated symmetric prediction, calibration, recovery,
+reports, contact sheets, and submission construction require no ViT-specific
+branch.
+
+Tests cover rectangular forward, freeze/unfreeze, positional interpolation,
+strict config, independent registry promotion, champion reconstruction,
+symmetric inference, and both notebook entry points. Generic checkpoint and
+recovery round-trip tests exercise the shared serialization mechanism.
+
 ## Still pending
 
-The model, configuration, pretrained-weight adaptation, direct training CLI,
-calibration loader, and inference loader are now compatible. The remaining
-ViT stages are Colab wiring, explicit recovery/champion integration checks,
-checkpoint/inference tests, a quick T4 run, and only then a full candidate run.
-No ViT quality result is claimed before those GPU experiments complete.
+The implementation is ready for a quick T4 run. Only measured GPU memory,
+speed, resume behavior, and validation metrics from that run can justify a
+full ViT experiment. No ViT quality result is claimed before it completes.

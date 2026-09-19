@@ -33,6 +33,9 @@ prevents results from depending on a previous Colab session.
 The quick run uses official pretrained weights, 2,048 train pairs, 512
 validation pairs, one frozen epoch, and two fine-tuning epochs. It is intended
 to expose environment and pipeline failures before spending a full session.
+For ViT-B/16, set `MODEL="vit"`; its quick batches are 16/32 instead of the
+CNN 64/128. If T4 memory is insufficient, start a new run with explicit 8/16
+batches rather than silently changing an existing recovery trajectory.
 
 Training is launched as `python -m scripts.train`, so imports resolve from the
 repository root without relying on a manually configured `PYTHONPATH`.
@@ -82,6 +85,10 @@ text-orientation/
         champion.json
       efficientnet_b0/
         efficientnet_b0_<accuracy>.pt
+        calibration.json
+        champion.json
+      vit_b_16/
+        vit_b_16_<accuracy>.pt
         calibration.json
         champion.json
   training/
@@ -136,6 +143,9 @@ text-orientation/
           best.pt
           status.json
       efficientnet_b0/
+        quick/
+        full/
+      vit_b_16/
         quick/
         full/
 ```

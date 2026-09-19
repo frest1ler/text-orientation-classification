@@ -14,6 +14,9 @@ point.
 The loader verifies checkpoint and calibration hashes, opens the checkpoint
 without downloading pretrained weights, checks its epoch, metrics, model name,
 and embedded configuration, then recreates the training preprocessing.
+Unless `--batch-size` is supplied, inference uses the batch size persisted in
+the selected champion configuration. This matters when `best` resolves to the
+heavier ViT-B/16 candidate.
 
 ## Symmetric prediction
 

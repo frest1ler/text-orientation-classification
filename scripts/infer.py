@@ -11,7 +11,12 @@ from typing import Any
 from tqdm.auto import tqdm
 
 from src.diagnostics import build_inference_report, create_contact_sheets, write_json_atomic
-from src.inference import infer_batch, load_champion, make_test_loader
+from src.inference import (
+    infer_batch,
+    load_champion,
+    make_test_loader,
+    resolve_inference_batch_size,
+)
 from src.inference_recovery import (
     inference_fingerprint,
     load_inference_recovery,
@@ -49,7 +54,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model", default="best")
     parser.add_argument("--test-zip", type=Path)
     parser.add_argument("--recovery-dir", type=Path)
-    parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument("--batch-size", type=int)
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--save-every-batches", type=int, default=10)
     parser.add_argument("--run-name")
@@ -134,10 +139,11 @@ def main() -> None:
     test_hash = zip_sha256(test_zip)
     device = select_device()
     loaded = load_champion(bundle, device)
+    batch_size = resolve_inference_batch_size(loaded.config, args.batch_size)
     dataset, _ = make_test_loader(
         str(test_zip),
         loaded.config,
-        args.batch_size,
+        batch_size,
         args.num_workers,
         device.type == "cuda",
     )
@@ -153,7 +159,7 @@ def main() -> None:
         "test_zip_sha256": test_hash,
         "input_height": loaded.config["model"]["input_height"],
         "input_width": loaded.config["model"]["input_width"],
-        "batch_size": args.batch_size,
+        "batch_size": batch_size,
         "num_workers": args.num_workers,
         "limit": total,
         "source_sha256": {
@@ -207,7 +213,7 @@ def main() -> None:
     dataset, loader = make_test_loader(
         str(test_zip),
         loaded.config,
-        args.batch_size,
+        batch_size,
         args.num_workers,
         device.type == "cuda",
         start_index=start_index,

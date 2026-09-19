@@ -109,17 +109,18 @@ PYTHONPATH=. python3 scripts/train.py --config configs/vit_b_16.yaml
 ```
 
 Its `384×96` positional-embedding adaptation is documented in
-[docs/vit_b_16.md](docs/vit_b_16.md). Colab wiring and the GPU smoke run remain
-the next ViT stages; the model should not yet be treated as an evaluated
-champion.
+[docs/vit_b_16.md](docs/vit_b_16.md). Training, recovery, registry, inference,
+and Colab wiring are implemented; the GPU smoke run is still required before
+the model can be treated as an evaluated candidate.
 
 Both use torchvision ImageNet weights, rectangular preprocessing, paired
 training, mixed precision on CUDA, and best-checkpoint selection by symmetric
 Brier score. Details are in
 [docs/compact_models.md](docs/compact_models.md).
 
-For the first GPU verification, open `colab_train.ipynb`, keep
-`MODEL="mobilenet"` and `QUICK_RUN=True`, and run all cells on a T4 runtime.
+For the first GPU verification, open `colab_train.ipynb`, choose `mobilenet`,
+`efficientnet`, or `vit`, keep `QUICK_RUN=True`, and run all cells on a T4
+runtime.
 The exact steps and the result archive to return are documented in
 [docs/colab_run.md](docs/colab_run.md).
 

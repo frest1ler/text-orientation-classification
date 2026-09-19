@@ -27,6 +27,16 @@ class LoadedChampion:
     calibrator: BinaryCalibrator
 
 
+def resolve_inference_batch_size(
+    config: dict[str, Any], override: int | None = None
+) -> int:
+    """Use an explicit override or the selected champion's persisted setting."""
+    batch_size = int(config["inference"]["batch_size"]) if override is None else override
+    if batch_size <= 0:
+        raise ValueError("batch-size must be positive")
+    return batch_size
+
+
 def load_champion(bundle: ChampionBundle, device: torch.device) -> LoadedChampion:
     """Load a hash-validated champion and verify its embedded metadata."""
     checkpoint = torch.load(bundle.checkpoint_path, map_location="cpu", weights_only=True)

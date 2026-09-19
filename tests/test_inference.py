@@ -4,9 +4,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
+from torch import nn
 
 from src.calibration import BinaryCalibrator
-from src.inference import infer_batch, load_champion
+from src.inference import infer_batch, load_champion, resolve_inference_batch_size
 from src.models import build_model
 from src.registry import ChampionBundle, file_sha256
 
@@ -14,6 +15,15 @@ from src.registry import ChampionBundle, file_sha256
 class MeanLogit(torch.nn.Module):
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         return images.mean(dim=(1, 2, 3))
+
+
+def test_inference_batch_defaults_to_selected_champion_config() -> None:
+    config = {"inference": {"batch_size": 32}}
+
+    assert resolve_inference_batch_size(config) == 32
+    assert resolve_inference_batch_size(config, override=8) == 8
+    with pytest.raises(ValueError, match="positive"):
+        resolve_inference_batch_size(config, override=0)
 
 
 def test_symmetric_inference_and_calibration() -> None:
@@ -86,3 +96,70 @@ def test_load_champion_rejects_manifest_metric_mismatch(tmp_path: Path) -> None:
     bundle.manifest["metrics"] = {"symmetric": {"brier_score": 0.2}}
     with pytest.raises(ValueError, match="metrics"):
         load_champion(bundle, torch.device("cpu"))
+
+
+def test_load_vit_champion_reconstructs_rectangular_dimensions(
+    tmp_path: Path, monkeypatch
+) -> None:
+    dimensions = {}
+
+    class TinyContract(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.weight = nn.Parameter(torch.tensor(1.0))
+
+        def forward(self, images):
+            return images.mean(dim=(1, 2, 3)) * self.weight
+
+    def fake_build_model(name, **kwargs):
+        dimensions.update({"name": name, **kwargs})
+        return TinyContract()
+
+    monkeypatch.setattr("src.inference.build_model", fake_build_model)
+    metrics = {"symmetric": {"brier_score": 0.08}}
+    config = {
+        "model": {
+            "name": "vit_b_16",
+            "dropout": 0.1,
+            "input_height": 96,
+            "input_width": 384,
+        }
+    }
+    checkpoint = tmp_path / "vit.pt"
+    torch.save(
+        {
+            "model_state": TinyContract().state_dict(),
+            "epoch": 3,
+            "metrics": metrics,
+            "config": config,
+        },
+        checkpoint,
+    )
+    calibration = {
+        "checkpoint_epoch": 3,
+        "prediction_mode": "symmetric",
+        "final_calibrator": {
+            "method": "temperature",
+            "slope": 0.7,
+            "intercept": 0.0,
+        },
+    }
+    bundle = ChampionBundle(
+        "vit_b_16",
+        tmp_path,
+        checkpoint,
+        {"model": "vit_b_16", "epoch": 3, "metrics": metrics},
+        calibration,
+    )
+
+    loaded = load_champion(bundle, torch.device("cpu"))
+
+    assert dimensions == {
+        "name": "vit_b_16",
+        "dropout": 0.1,
+        "pretrained": False,
+        "input_height": 96,
+        "input_width": 384,
+    }
+    assert loaded.calibrator.slope == pytest.approx(0.7)
+    assert loaded.model(torch.ones(1, 3, 2, 2)).shape == (1,)

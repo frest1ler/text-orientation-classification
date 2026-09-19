@@ -1,4 +1,4 @@
-"""Train a paired compact CNN in frozen-head and full fine-tuning phases."""
+"""Train a paired CNN/ViT in frozen-head and full fine-tuning phases."""
 
 from __future__ import annotations
 

@@ -22,6 +22,12 @@ def test_source_delivery_is_ready() -> None:
         "colab_train.ipynb",
         "colab_inference.ipynb",
     }
+    train_notebook = (PROJECT_ROOT / "colab_train.ipynb").read_text()
+    inference_notebook = (PROJECT_ROOT / "colab_inference.ipynb").read_text()
+    assert "configs/vit_b_16.yaml" in train_notebook
+    assert "TRAIN_BATCH_SIZE = None" in train_notebook
+    assert "vit_b_16" in inference_notebook
+    assert "BATCH_SIZE = None" in inference_notebook
 
 
 def test_source_delivery_rejects_invalid_notebook(tmp_path: Path) -> None:

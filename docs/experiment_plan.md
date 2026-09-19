@@ -68,8 +68,9 @@ complete.
 12. Optuna search on the best compact architecture, followed by full-data
     confirmation of the strongest configurations.
 13. ViT-B/16 after the compact pipeline is stable. Model construction,
-    rectangular positional embeddings, freezing, and configuration are
-    implemented; Colab smoke/full experiments remain pending.
+    rectangular positional embeddings, freezing, configuration, training,
+    recovery, registry, Colab, and inference are implemented; smoke/full GPU
+    experiments remain pending.
 14. CNN/OCR or CNN/ViT ensemble only if validation Brier improves materially.
 15. ~~Final `test.zip` inference and submission creation.~~ Implemented with
     exact template validation, reports, contact sheets, and a reviewer-facing
