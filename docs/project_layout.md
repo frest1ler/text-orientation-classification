@@ -22,7 +22,13 @@ text-orientation/
       <model>/<quick|full>/
   inference/
     runs/
+      <run-id>/
+        submission.csv
+        predictions.csv
+        inference_report.json
+        contact_sheets/
     recovery/
+      <model>/<full|smoke_N>/
   ocr/
     runs/
 ```

@@ -23,6 +23,9 @@ validation Brier score.
 - Strict ordered access to test images directly inside the ZIP archive.
 - Ordered test DataLoader, validated champion loading, symmetric inference,
   calibration, and fingerprinted inference recovery.
+- Strict sample-template submission generation and inference diagnostics.
+- Qualitative contact sheets and one-click resumable Colab inference for the
+  best or a named champion.
 
 Every architecture owns an independent champion. A run can replace only the
 champion of the same model and only under a comparable validation protocol.
@@ -52,7 +55,10 @@ model champions for later cross-model and ensemble comparison.
     confirmation of the strongest configurations.
 13. ViT-B/16 after the compact pipeline is stable.
 14. CNN/OCR or CNN/ViT ensemble only if validation Brier improves materially.
-15. Final `test.zip` inference and submission creation.
+15. ~~Final `test.zip` inference and submission creation.~~ Implemented with
+    exact template validation, reports, contact sheets, and a reviewer-facing
+    Colab notebook; the actual full run remains to be executed after all
+    candidate champions are trained.
 
 Epoch-varying augmentation may change brightness, contrast, background,
 resolution, blur, noise, JPEG degradation, small angle, and mild perspective.

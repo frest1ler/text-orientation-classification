@@ -178,6 +178,13 @@ python3 -m scripts.infer \
 ```
 
 The command validates the complete bundle, reads images directly from
-`data/test.zip`, and resumes through fingerprinted atomic state. See
-[docs/inference_pipeline.md](docs/inference_pipeline.md). Final submission and
-diagnostic report generation are intentionally handled by the next stages.
+`data/test.zip`, and resumes through fingerprinted atomic state. A completed
+full run writes `submission.csv`, `predictions.csv`, `inference_report.json`,
+and four contact sheets below `inference/runs/<run-id>/`. A limited
+`--limit 64` smoke run writes diagnostics but deliberately does not create a
+submission.
+
+For a reviewer-friendly Colab launch, open `colab_inference.ipynb`, choose
+`MODEL="best"` or a named champion, and run all cells. It supports both the
+Drive registry and a separately uploaded champion bundle. See
+[docs/inference_pipeline.md](docs/inference_pipeline.md).

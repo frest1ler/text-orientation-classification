@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from pathlib import Path
+from typing import Any
 
 from tqdm.auto import tqdm
 
+from src.diagnostics import build_inference_report, create_contact_sheets, write_json_atomic
 from src.inference import infer_batch, load_champion, make_test_loader
 from src.inference_recovery import (
     inference_fingerprint,
@@ -15,18 +18,23 @@ from src.inference_recovery import (
     save_inference_recovery,
 )
 from src.project_layout import ProjectLayout, resolve_artifact_root
+from src.recovery import copy_file_atomic
 from src.registry import file_sha256, select_champion
 from src.reproducibility import select_device
+from src.submission import build_submission_rows, write_submission_atomic
+from src.test_data import ZipTestDataset
 from src.test_data import zip_sha256
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 INFERENCE_SOURCES = (
     "src/calibration.py",
+    "src/diagnostics.py",
     "src/inference.py",
     "src/inference_recovery.py",
     "src/models.py",
     "src/registry.py",
+    "src/submission.py",
     "src/test_data.py",
     "src/training.py",
     "src/transforms.py",
@@ -44,15 +52,79 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--save-every-batches", type=int, default=10)
+    parser.add_argument("--run-name")
+    parser.add_argument("--contact-sheet-count", type=int, default=16)
+    parser.add_argument("--skip-contact-sheets", action="store_true")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--no-resume", action="store_true")
     return parser.parse_args()
+
+
+def finalize_run(
+    layout: ProjectLayout,
+    bundle: Any,
+    loaded: Any,
+    test_zip: Path,
+    recovery_dir: Path,
+    rows: list[dict[str, object]],
+    metadata: dict[str, object],
+    full_test_size: int,
+    run_name: str | None,
+    contact_sheet_count: int,
+    skip_contact_sheets: bool,
+) -> dict[str, object]:
+    mode = "full" if len(rows) == full_test_size else f"smoke_{len(rows)}"
+    output_dir = layout.inference_runs / (
+        run_name or f"{bundle.model}_{mode}_{bundle.manifest['checkpoint_sha256'][:12]}"
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    predictions_path = copy_file_atomic(
+        recovery_dir / "predictions.csv", output_dir / "predictions.csv"
+    )
+    report = build_inference_report(rows, metadata, bundle.manifest, bundle.calibration)
+    report.update({"mode": mode, "complete_test_set": len(rows) == full_test_size})
+    report_path = write_json_atomic(output_dir / "inference_report.json", report)
+
+    raw_dataset = ZipTestDataset(
+        test_zip,
+        loaded.config["data"]["image_prefix"],
+        loaded.config["data"]["sample_submission_member"],
+    )
+    submission_path = None
+    if len(rows) == full_test_size:
+        submission_rows = build_submission_rows(
+            raw_dataset.columns, raw_dataset.template_rows, rows
+        )
+        submission_path = write_submission_atomic(
+            output_dir / "submission.csv", raw_dataset.columns, submission_rows
+        )
+    contact_sheets: list[str] = []
+    if not skip_contact_sheets:
+        contact_sheets = [
+            str(path)
+            for path in create_contact_sheets(
+                raw_dataset,
+                rows,
+                output_dir / "contact_sheets",
+                contact_sheet_count,
+            )
+        ]
+    raw_dataset.close()
+    return {
+        "output_dir": str(output_dir),
+        "predictions": str(predictions_path),
+        "submission": str(submission_path) if submission_path else None,
+        "report": str(report_path),
+        "contact_sheets": contact_sheets,
+    }
 
 
 def main() -> None:
     args = parse_args()
     if args.save_every_batches <= 0:
         raise ValueError("save-every-batches must be positive")
+    if args.contact_sheet_count <= 0:
+        raise ValueError("contact-sheet-count must be positive")
     layout = ProjectLayout.from_root(args.project_dir)
     artifact_root = resolve_artifact_root(
         layout.root, args.artifact_source, args.uploaded_path
@@ -69,7 +141,8 @@ def main() -> None:
         args.num_workers,
         device.type == "cuda",
     )
-    total = len(dataset) if args.limit is None else min(args.limit, len(dataset))
+    full_test_size = len(dataset)
+    total = full_test_size if args.limit is None else min(args.limit, full_test_size)
     if total <= 0:
         raise ValueError("inference limit must be positive")
     image_ids = dataset.image_ids[:total]
@@ -89,7 +162,8 @@ def main() -> None:
         },
     }
     fingerprint = inference_fingerprint(fingerprint_payload)
-    recovery_dir = args.recovery_dir or layout.inference_recovery / bundle.model
+    mode = "full" if total == full_test_size else f"smoke_{total}"
+    recovery_dir = args.recovery_dir or layout.inference_recovery / bundle.model / mode
     if args.no_resume:
         rows: list[dict[str, object]] = []
         metadata = {"completed": False}
@@ -98,8 +172,13 @@ def main() -> None:
             recovery_dir, fingerprint, image_ids
         )
     if metadata.get("completed"):
-        print(json.dumps({"status": "already_complete", **metadata}, indent=2))
         dataset.close()
+        outputs = finalize_run(
+            layout, bundle, loaded, test_zip, recovery_dir, rows, metadata,
+            full_test_size, args.run_name, args.contact_sheet_count,
+            args.skip_contact_sheets,
+        )
+        print(json.dumps({"status": "already_complete", **metadata, **outputs}, indent=2))
         return
     start_index = len(rows)
     if start_index == total:
@@ -115,8 +194,14 @@ def main() -> None:
             },
             completed=True,
         )
+        rows, metadata = load_inference_recovery(recovery_dir, fingerprint, image_ids)
         dataset.close()
-        print(json.dumps({"status": "complete", "processed": total, "total": total}, indent=2))
+        outputs = finalize_run(
+            layout, bundle, loaded, test_zip, recovery_dir, rows, metadata,
+            full_test_size, args.run_name, args.contact_sheet_count,
+            args.skip_contact_sheets,
+        )
+        print(json.dumps({"status": "complete", **metadata, **outputs}, indent=2))
         return
     dataset.close()
     dataset, loader = make_test_loader(
@@ -132,7 +217,10 @@ def main() -> None:
         **fingerprint_payload,
         "selected_model": bundle.model,
         "device": str(device),
+        "full_test_images": full_test_size,
     }
+    previous_elapsed = float(metadata.get("elapsed_seconds", 0.0))
+    started_at = time.perf_counter()
     progress = tqdm(loader, desc=f"inference {bundle.model}", unit="batch")
     for batch_number, batch in enumerate(progress, start=1):
         arrays = infer_batch(
@@ -157,10 +245,32 @@ def main() -> None:
                 fingerprint,
                 rows,
                 total,
-                common_metadata,
+                {
+                    **common_metadata,
+                    "elapsed_seconds": previous_elapsed
+                    + (time.perf_counter() - started_at),
+                },
                 completed=len(rows) == total,
             )
     dataset.close()
+    elapsed = previous_elapsed + (time.perf_counter() - started_at)
+    # Ensure the final metadata contains elapsed time even when the last batch was saved above.
+    save_inference_recovery(
+        recovery_dir,
+        fingerprint,
+        rows,
+        total,
+        {**common_metadata, "elapsed_seconds": elapsed},
+        completed=len(rows) == total,
+    )
+    rows, metadata = load_inference_recovery(recovery_dir, fingerprint, image_ids)
+    outputs = {}
+    if len(rows) == total:
+        outputs = finalize_run(
+            layout, bundle, loaded, test_zip, recovery_dir, rows, metadata,
+            full_test_size, args.run_name, args.contact_sheet_count,
+            args.skip_contact_sheets,
+        )
     print(
         json.dumps(
             {
@@ -169,6 +279,7 @@ def main() -> None:
                 "processed": len(rows),
                 "total": total,
                 "recovery_dir": str(recovery_dir),
+                **outputs,
             },
             indent=2,
         )
