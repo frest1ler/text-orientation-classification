@@ -48,9 +48,9 @@ stored in Git history:
 #### Alternative: automatically download `test.zip` from Google Drive
 
 The submitted `solution-v1` notebook normally opens a local file-upload dialog
-when `/content/test.zip` is absent. To download the organizer-provided test
-archive from this
-[Google Drive folder](https://drive.google.com/drive/folders/16oPfpaQ9UQcHhrUCBcumce58e76sM0Au?usp=drive_link)
+when `/content/test.zip` is absent. To download the organizer-provided archive
+directly from
+[Google Drive](https://drive.google.com/file/d/1PoppN_066oSdaSdqStulA6SgeBqS8PTn/view?usp=sharing)
 instead, replace the notebook's entire data-and-artifact loading cell (the cell
 that starts with `test_zip = Path(TEST_ZIP_PATH)`) with the cell below. Then use
 **Runtime → Run all** as usual.
@@ -63,28 +63,21 @@ from pathlib import Path
 
 import gdown
 
-TEST_DATA_DRIVE_URL = "https://drive.google.com/drive/folders/16oPfpaQ9UQcHhrUCBcumce58e76sM0Au?usp=drive_link"
-TEST_DATA_DOWNLOAD_DIR = Path("/content/avito-test-data")
+TEST_ZIP_DRIVE_URL = "https://drive.google.com/file/d/1PoppN_066oSdaSdqStulA6SgeBqS8PTn/view?usp=sharing"
 
-# Prefer an archive already placed at TEST_ZIP_PATH. Otherwise download the
-# shared Drive folder and locate exactly one test.zip inside it.
-test_zip = Path(TEST_ZIP_PATH)
-if not test_zip.is_file():
-    TEST_DATA_DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    gdown.download_folder(
-        url=TEST_DATA_DRIVE_URL,
-        output=str(TEST_DATA_DOWNLOAD_DIR),
-        quiet=False,
-        use_cookies=False,
-        remaining_ok=True,
-    )
-    test_archives = sorted(TEST_DATA_DOWNLOAD_DIR.rglob("test.zip"))
-    if len(test_archives) != 1:
-        raise RuntimeError(
-            "Expected exactly one test.zip after the Google Drive download, "
-            f"found {len(test_archives)}: {test_archives}"
-        )
-    test_zip = test_archives[0]
+# Always download the shared test.zip directly from Google Drive. This
+# alternative deliberately does not inspect TEST_ZIP_PATH or open a local
+# upload dialog.
+test_zip = Path("/content/test.zip")
+test_zip.unlink(missing_ok=True)
+downloaded = gdown.download(
+    url=TEST_ZIP_DRIVE_URL,
+    output=str(test_zip),
+    quiet=False,
+    fuzzy=True,
+)
+if downloaded is None or not test_zip.is_file():
+    raise RuntimeError("Failed to download test.zip from Google Drive")
 
 # Download the immutable model bundle from the GitHub Release and verify it.
 bundle = Path("/content/text-orientation-solution-artifacts.zip")
@@ -115,11 +108,11 @@ print({
 })
 ```
 
-`TEST_ZIP_PATH` always denotes a local filesystem path; a Drive folder URL
-cannot be assigned to it directly. The replacement cell converts the public
-folder URL into a local archive automatically. The Drive folder must allow
-read access to anyone with the link. The test data remains separate from the
-GitHub model Release.
+This alternative does not use `TEST_ZIP_PATH`: every execution downloads the
+public file to `/content/test.zip`, replacing an existing file with that name.
+It never searches local files and never opens an upload dialog. The Drive file
+must allow read access to anyone with the link. The test data remains separate
+from the GitHub model Release.
 
 ### Run a particular trained model
 
