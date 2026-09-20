@@ -63,16 +63,20 @@ def make_bundle(registry: Path, model: str, brier: float, protocol: str) -> dict
     }
 
 
-def prepare(tmp_path: Path, standard_brier: float, robust_brier: float, robust_protocol="p") -> Path:
+def prepare(
+    tmp_path: Path,
+    standard_brier: float,
+    robust_brier: float,
+    robust_protocol="p",
+    model="mobilenet_v3_large",
+) -> Path:
     registry = tmp_path / "registry"
-    standard = make_bundle(registry, "mobilenet_v3_large", standard_brier, "p")
-    robust = make_bundle(
-        registry / "robust", "mobilenet_v3_large", robust_brier, robust_protocol
-    )
-    write_json(registry / "leaderboard.json", {"models": {"mobilenet_v3_large": standard}})
+    standard = make_bundle(registry, model, standard_brier, "p")
+    robust = make_bundle(registry / "robust", model, robust_brier, robust_protocol)
+    write_json(registry / "leaderboard.json", {"models": {model: standard}})
     write_json(
         registry / "robust/leaderboard.json",
-        {"models": {"mobilenet_v3_large": robust}},
+        {"models": {model: robust}},
     )
     return registry
 
@@ -87,6 +91,13 @@ def test_robust_requires_material_brier_improvement(tmp_path: Path) -> None:
 def test_small_improvement_keeps_standard_recommendation(tmp_path: Path) -> None:
     registry = prepare(tmp_path, 0.08, 0.078)
     assert compare_robust(registry)["recommend_robust"] is False
+
+
+def test_vit_robust_is_compared_with_vit_standard(tmp_path: Path) -> None:
+    registry = prepare(tmp_path, 0.06, 0.05, model="vit_b_16")
+    report = compare_robust(registry, model="vit_b_16")
+    assert report["model"] == "vit_b_16"
+    assert report["brier_improvement"] == pytest.approx(0.01)
 
 
 def test_comparison_rejects_different_validation_protocols(tmp_path: Path) -> None:

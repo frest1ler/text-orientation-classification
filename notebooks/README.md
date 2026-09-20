@@ -9,7 +9,7 @@ identical between environments.
 | Train MobileNet, EfficientNet, or ViT | `colab/train.ipynb` | `cloudcompute/train.ipynb` |
 | Test inference and submission | `colab/inference.ipynb` | `cloudcompute/inference.ipynb` |
 | Optuna search | `colab/optuna.ipynb` | `cloudcompute/optuna.ipynb` |
-| Robust fine-tuning | `colab/robust_train.ipynb` | `cloudcompute/robust_train.ipynb` |
+| Robust MobileNet/ViT fine-tuning | `colab/robust_train.ipynb` | `cloudcompute/robust_train.ipynb` |
 | Ensemble weight search | `colab/ensemble.ipynb` | `cloudcompute/ensemble.ipynb` |
 
 Colab uses the mounted Google Drive project directory. CloudCompute uses two
@@ -24,6 +24,12 @@ example, a full ViT run belongs in
 `/root/text-orientation-state/training/recovery/vit_b_16/full` and must contain
 `last.pt`. Stop the instance to preserve its disk; download results before
 deleting the instance.
+
+Both robust notebooks use one `MODEL` setting: `"mobilenet"` or `"vit"`.
+It selects the matching standard champion, config, safe batch defaults,
+recovery namespace, calibration command, robust registry entry, and comparison
+report. A full promoted ViT candidate is available to inference explicitly as
+`MODEL="vit_b_16_robust"`; it never replaces `MODEL="best"`.
 
 Ensemble search consumes each champion run's `validation_predictions.npz`,
 checks the shared validation protocol and target order, and stores only a

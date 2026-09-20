@@ -1,4 +1,4 @@
-"""Fine-tune a standard or robust MobileNet candidate without touching champions."""
+"""Fine-tune a supported standard champion on standard or robust data."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ ROBUST_SOURCES = (
     "src/training.py",
     "src/models.py",
 )
+SUPPORTED_ROBUST_MODELS = frozenset({"mobilenet_v3_large", "vit_b_16"})
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,12 +64,25 @@ def robust_recovery_fingerprint(config: dict[str, Any], runtime: dict[str, Any])
     return hashlib.sha256(canonical).hexdigest()
 
 
-def _load_initial_weights(model: torch.nn.Module, checkpoint_path: Path) -> dict[str, Any]:
+def _load_initial_weights(
+    model: torch.nn.Module, checkpoint_path: Path, expected_model: str
+) -> dict[str, Any]:
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     config = checkpoint.get("config", {})
-    if config.get("model", {}).get("name") != "mobilenet_v3_large":
-        raise ValueError("initial checkpoint must contain MobileNetV3-Large")
-    model.load_state_dict(checkpoint["model_state"])
+    checkpoint_model = config.get("model", {}).get("name")
+    if checkpoint_model != expected_model:
+        raise ValueError(
+            "initial checkpoint model does not match robust config: "
+            f"expected {expected_model!r}, got {checkpoint_model!r}"
+        )
+    if "model_state" not in checkpoint:
+        raise ValueError("initial checkpoint does not contain model_state")
+    try:
+        model.load_state_dict(checkpoint["model_state"])
+    except RuntimeError as error:
+        raise ValueError(
+            f"initial checkpoint weights are incompatible with {expected_model!r}"
+        ) from error
     return {
         "path": str(checkpoint_path),
         "sha256": file_sha256(checkpoint_path),
@@ -79,8 +93,12 @@ def _load_initial_weights(model: torch.nn.Module, checkpoint_path: Path) -> dict
 def main() -> None:
     args = parse_args()
     config = load_config(args.config)
-    if config.model.name != "mobilenet_v3_large":
-        raise ValueError("robust experiment is intentionally limited to MobileNetV3-Large")
+    if config.model.name not in SUPPORTED_ROBUST_MODELS:
+        supported = ", ".join(sorted(SUPPORTED_ROBUST_MODELS))
+        raise ValueError(
+            f"robust experiment does not support {config.model.name!r}; "
+            f"choose one of: {supported}"
+        )
     train_samples = args.train_base_samples or config.synthetic.train_samples
     validation_samples = args.validation_base_samples or config.synthetic.validation_samples
     batch_size = args.batch_size or config.training.batch_size
@@ -137,7 +155,7 @@ def main() -> None:
         input_width=config.model.input_width,
     ).to(device)
     initial = (
-        _load_initial_weights(model, args.initial_checkpoint)
+        _load_initial_weights(model, args.initial_checkpoint, config.model.name)
         if args.initial_checkpoint is not None
         else {"path": None, "sha256": None, "epoch": None}
     )

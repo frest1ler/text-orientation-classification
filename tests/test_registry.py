@@ -138,3 +138,15 @@ def test_robust_champion_is_selected_without_changing_standard_best(tmp_path: Pa
     candidate = select_champion(registry, "mobilenet_v3_large_robust")
     assert candidate.model == "mobilenet_v3_large_robust"
     assert candidate.manifest["model"] == "mobilenet_v3_large"
+
+
+def test_vit_robust_selector_uses_isolated_registry(tmp_path: Path) -> None:
+    registry = tmp_path / "registry"
+    standard = make_bundle(registry, "vit_b_16", 0.06)
+    robust = make_bundle(registry / "robust", "vit_b_16", 0.05)
+    write_json(registry / "leaderboard.json", {"models": {"vit_b_16": standard}})
+    write_json(registry / "robust/leaderboard.json", {"models": {"vit_b_16": robust}})
+
+    candidate = select_champion(registry, "vit_b_16_robust")
+    assert candidate.model == "vit_b_16_robust"
+    assert candidate.manifest["model"] == "vit_b_16"

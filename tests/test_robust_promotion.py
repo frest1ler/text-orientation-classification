@@ -7,9 +7,15 @@ from scripts.promote_robust_champion import validate_full_robust_run
 from src.config import load_config
 
 
-def write_run(path: Path, profile: str, train_samples: int, validation_samples: int) -> None:
+def write_run(
+    path: Path,
+    profile: str,
+    train_samples: int,
+    validation_samples: int,
+    config_path: str = "configs/baseline.yaml",
+) -> None:
     path.mkdir()
-    config = load_config("configs/baseline.yaml").to_dict()
+    config = load_config(config_path).to_dict()
     (path / "config.json").write_text(json.dumps(config))
     (path / "runtime.json").write_text(
         json.dumps(
@@ -23,9 +29,10 @@ def write_run(path: Path, profile: str, train_samples: int, validation_samples: 
     )
 
 
-def test_only_full_robust_run_can_be_promoted(tmp_path: Path) -> None:
+@pytest.mark.parametrize("config_path", ["configs/baseline.yaml", "configs/vit_b_16.yaml"])
+def test_only_full_robust_run_can_be_promoted(tmp_path: Path, config_path: str) -> None:
     run = tmp_path / "run"
-    write_run(run, "robust", 50_000, 5_000)
+    write_run(run, "robust", 50_000, 5_000, config_path)
     assert validate_full_robust_run(run)["augmentation_profile"] == "robust"
 
 
