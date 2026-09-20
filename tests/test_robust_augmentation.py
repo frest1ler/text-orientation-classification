@@ -6,6 +6,7 @@ from PIL import Image
 from src.config import load_config
 from src.robust_augmentation import (
     ProfiledPairedSyntheticDataset,
+    _motion_blur,
     apply_robust_augmentation,
     augmentation_seed,
 )
@@ -23,6 +24,14 @@ def test_robust_augmentation_is_seeded_rgb_and_shape_preserving() -> None:
     assert first.mode == "RGB"
     assert first.size == image.size
     assert np.array_equal(np.asarray(first), np.asarray(second))
+
+
+def test_motion_blur_uses_pillow_supported_kernel_sizes() -> None:
+    image = Image.new("RGB", (160, 48), "white")
+    for seed in range(20):
+        blurred = _motion_blur(image, np.random.default_rng(seed))
+        assert blurred.size == image.size
+        assert blurred.mode == "RGB"
 
 
 def test_augmentation_seed_changes_by_epoch_and_sample() -> None:
@@ -78,4 +87,3 @@ def test_validation_remains_epoch_independent() -> None:
     first = validation[0]
     second = validation[0]
     assert np.array_equal(np.asarray(first["image"]), np.asarray(second["image"]))
-

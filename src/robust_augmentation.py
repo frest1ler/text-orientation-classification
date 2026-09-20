@@ -75,7 +75,8 @@ def _edge_crop(image: Image.Image, rng: np.random.Generator) -> Image.Image:
 
 
 def _motion_blur(image: Image.Image, rng: np.random.Generator) -> Image.Image:
-    size = int(rng.choice((3, 5, 7)))
+    # Pillow's built-in Kernel filter accepts only 3x3 and 5x5 kernels.
+    size = int(rng.choice((3, 5)))
     kernel = np.zeros((size, size), dtype=np.float32)
     direction = int(rng.integers(0, 4))
     if direction == 0:
