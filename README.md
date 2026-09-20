@@ -32,8 +32,8 @@ registry are required.
 1. Open [`notebooks/colab/solution.ipynb`](notebooks/colab/solution.ipynb) in
    Google Colab and select a GPU runtime.
 2. Keep the pinned `REVISION`, `ARTIFACT_URL`, and `ARTIFACT_SHA256` unchanged.
-3. Put the issued archive at `/content/test.zip`, or leave it absent and select
-   `test.zip` in the upload dialog created by the notebook.
+3. The notebook downloads the pinned `test.zip` from the public Google Drive
+   file automatically and verifies its expected byte size.
 4. Choose **Runtime → Run all**. The notebook clones the pinned source revision,
    installs dependencies, downloads the immutable Release asset, verifies its
    SHA-256, and runs the final ensemble.
@@ -45,74 +45,18 @@ The model bundle is published separately as a GitHub Release asset and is not
 stored in Git history:
 [`text-orientation-solution-artifacts.zip`](https://github.com/frest1ler/text-orientation-classification/releases/download/solution-v1/text-orientation-solution-artifacts.zip).
 
-#### Alternative: automatically download `test.zip` from Google Drive
+#### Test data source
 
-The submitted `solution-v2` notebook normally opens a local file-upload dialog
-when `/content/test.zip` is absent. To download the organizer-provided archive
-directly from
-[Google Drive](https://drive.google.com/file/d/1PoppN_066oSdaSdqStulA6SgeBqS8PTn/view?usp=sharing)
-instead, replace the notebook's entire data-and-artifact loading cell (the cell
-that starts with `test_zip = Path(TEST_ZIP_PATH)`) with the cell below. Then use
-**Runtime → Run all** as usual.
+The `solution-v3` notebook downloads the organizer-provided archive directly
+from [Google Drive](https://drive.google.com/file/d/1PoppN_066oSdaSdqStulA6SgeBqS8PTn/view?usp=sharing)
+to `/content/test.zip`. No local search or upload dialog is involved. The
+pinned expected size is `681431081` bytes; inference starts only after the
+download completes and this size matches.
 
-```python
-import hashlib
-import shutil
-import zipfile
-from pathlib import Path
-
-import gdown
-
-TEST_ZIP_DRIVE_URL = "https://drive.google.com/file/d/1PoppN_066oSdaSdqStulA6SgeBqS8PTn/view?usp=sharing"
-
-# Always download the shared test.zip directly from Google Drive. This
-# alternative deliberately does not inspect TEST_ZIP_PATH or open a local
-# upload dialog.
-test_zip = Path("/content/test.zip")
-test_zip.unlink(missing_ok=True)
-downloaded = gdown.download(
-    url=TEST_ZIP_DRIVE_URL,
-    output=str(test_zip),
-    quiet=False,
-    fuzzy=True,
-)
-if downloaded is None or not test_zip.is_file():
-    raise RuntimeError("Failed to download test.zip from Google Drive")
-
-# Download the immutable model bundle from the GitHub Release and verify it.
-bundle = Path("/content/text-orientation-solution-artifacts.zip")
-if not bundle.is_file():
-    gdown.download(ARTIFACT_URL, str(bundle), quiet=False, fuzzy=True)
-
-digest_builder = hashlib.sha256()
-with bundle.open("rb") as stream:
-    for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-        digest_builder.update(chunk)
-digest = digest_builder.hexdigest()
-if digest != ARTIFACT_SHA256:
-    raise ValueError(f"Artifact SHA-256 mismatch: {digest}")
-
-# Prepare the project consumed by the regular inference cell.
-project = Path(PROJECT_DIR)
-(project / "data").mkdir(parents=True, exist_ok=True)
-with zipfile.ZipFile(bundle) as archive:
-    archive.extractall(project)
-
-destination = project / "data/test.zip"
-if destination.resolve() != test_zip.resolve():
-    shutil.copy2(test_zip, destination)
-
-print({
-    "test_zip": str(destination),
-    "artifact_sha256": digest,
-})
-```
-
-This alternative does not use `TEST_ZIP_PATH`: every execution downloads the
-public file to `/content/test.zip`, replacing an existing file with that name.
-It never searches local files and never opens an upload dialog. The Drive file
-must allow read access to anyone with the link. The test data remains separate
-from the GitHub model Release.
+The Drive file must remain readable by anyone with the link. The test data is
+not duplicated in Git or in the model Release. If redistribution access is
+withdrawn, a reviewer can still use the standard experiment inference notebook
+with their own issued archive at `PROJECT_DIR/data/test.zip`.
 
 ### Run a particular trained model
 

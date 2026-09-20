@@ -12,7 +12,7 @@ require a pre-existing Google Drive project.
 Keep these pinned values unchanged:
 
 ```python
-REVISION = "solution-v2"
+REVISION = "solution-v3"
 ARTIFACT_URL = "https://github.com/frest1ler/text-orientation-classification/releases/download/solution-v1/text-orientation-solution-artifacts.zip"
 ARTIFACT_SHA256 = "08864ad16e7df88489c6479a060c817d9d9041a6c75674f077a7167954583502"
 TEST_ZIP_PATH = "/content/test.zip"
@@ -22,9 +22,9 @@ BATCH_SIZE = None
 Procedure:
 
 1. Select **Runtime → Change runtime type → GPU**.
-2. Upload the issued archive as `/content/test.zip`. If it is absent, the
-   notebook opens an upload dialog automatically.
-3. Select **Runtime → Run all**.
+2. Select **Runtime → Run all**. The issued `test.zip` is downloaded from the
+   pinned public Google Drive URL automatically.
+3. Wait for the test archive and immutable model bundle integrity checks.
 4. Wait for both ensemble components. They run sequentially to reduce GPU RAM.
 5. The notebook validates 20,000 rows and downloads `submission.csv`.
 
