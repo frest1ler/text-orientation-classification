@@ -47,7 +47,7 @@ stored in Git history:
 
 #### Alternative: automatically download `test.zip` from Google Drive
 
-The submitted `solution-v1` notebook normally opens a local file-upload dialog
+The submitted `solution-v2` notebook normally opens a local file-upload dialog
 when `/content/test.zip` is absent. To download the organizer-provided archive
 directly from
 [Google Drive](https://drive.google.com/file/d/1PoppN_066oSdaSdqStulA6SgeBqS8PTn/view?usp=sharing)

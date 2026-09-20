@@ -12,7 +12,7 @@ require a pre-existing Google Drive project.
 Keep these pinned values unchanged:
 
 ```python
-REVISION = "solution-v1"
+REVISION = "solution-v2"
 ARTIFACT_URL = "https://github.com/frest1ler/text-orientation-classification/releases/download/solution-v1/text-orientation-solution-artifacts.zip"
 ARTIFACT_SHA256 = "08864ad16e7df88489c6479a060c817d9d9041a6c75674f077a7167954583502"
 TEST_ZIP_PATH = "/content/test.zip"
