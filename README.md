@@ -45,6 +45,30 @@ The model bundle is published separately as a GitHub Release asset and is not
 stored in Git history:
 [`text-orientation-solution-artifacts.zip`](https://github.com/frest1ler/text-orientation-classification/releases/download/solution-v1/text-orientation-solution-artifacts.zip).
 
+#### Optional: download `test.zip` from Google Drive
+
+The organizer-provided test data can also be copied from this
+[Google Drive folder](https://drive.google.com/drive/folders/16oPfpaQ9UQcHhrUCBcumce58e76sM0Au?usp=drive_link).
+In Colab, run the following cell before the data-loading cell in
+`solution.ipynb`:
+
+```python
+!pip install -q gdown
+!gdown --folder "https://drive.google.com/drive/folders/16oPfpaQ9UQcHhrUCBcumce58e76sM0Au?usp=drive_link" -O /content/avito-test-data
+
+from pathlib import Path
+
+test_archives = list(Path("/content/avito-test-data").rglob("test.zip"))
+if len(test_archives) != 1:
+    raise RuntimeError(f"Expected exactly one test.zip, found: {test_archives}")
+TEST_ZIP_PATH = str(test_archives[0])
+print("TEST_ZIP_PATH =", TEST_ZIP_PATH)
+```
+
+`TEST_ZIP_PATH` is a local filesystem path, not a Google Drive URL. If Drive
+access or automated downloading is unavailable, use the notebook's regular
+upload dialog instead. The test archive is not included in the model Release.
+
 ### Run a particular trained model
 
 Use [`notebooks/colab/inference.ipynb`](notebooks/colab/inference.ipynb) when a
