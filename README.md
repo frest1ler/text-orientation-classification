@@ -45,29 +45,81 @@ The model bundle is published separately as a GitHub Release asset and is not
 stored in Git history:
 [`text-orientation-solution-artifacts.zip`](https://github.com/frest1ler/text-orientation-classification/releases/download/solution-v1/text-orientation-solution-artifacts.zip).
 
-#### Optional: download `test.zip` from Google Drive
+#### Alternative: automatically download `test.zip` from Google Drive
 
-The organizer-provided test data can also be copied from this
-[Google Drive folder](https://drive.google.com/drive/folders/16oPfpaQ9UQcHhrUCBcumce58e76sM0Au?usp=drive_link).
-In Colab, run the following cell before the data-loading cell in
-`solution.ipynb`:
+The submitted `solution-v1` notebook normally opens a local file-upload dialog
+when `/content/test.zip` is absent. To download the organizer-provided test
+archive from this
+[Google Drive folder](https://drive.google.com/drive/folders/16oPfpaQ9UQcHhrUCBcumce58e76sM0Au?usp=drive_link)
+instead, replace the notebook's entire data-and-artifact loading cell (the cell
+that starts with `test_zip = Path(TEST_ZIP_PATH)`) with the cell below. Then use
+**Runtime → Run all** as usual.
 
 ```python
-!pip install -q gdown
-!gdown --folder "https://drive.google.com/drive/folders/16oPfpaQ9UQcHhrUCBcumce58e76sM0Au?usp=drive_link" -O /content/avito-test-data
-
+import hashlib
+import shutil
+import zipfile
 from pathlib import Path
 
-test_archives = list(Path("/content/avito-test-data").rglob("test.zip"))
-if len(test_archives) != 1:
-    raise RuntimeError(f"Expected exactly one test.zip, found: {test_archives}")
-TEST_ZIP_PATH = str(test_archives[0])
-print("TEST_ZIP_PATH =", TEST_ZIP_PATH)
+import gdown
+
+TEST_DATA_DRIVE_URL = "https://drive.google.com/drive/folders/16oPfpaQ9UQcHhrUCBcumce58e76sM0Au?usp=drive_link"
+TEST_DATA_DOWNLOAD_DIR = Path("/content/avito-test-data")
+
+# Prefer an archive already placed at TEST_ZIP_PATH. Otherwise download the
+# shared Drive folder and locate exactly one test.zip inside it.
+test_zip = Path(TEST_ZIP_PATH)
+if not test_zip.is_file():
+    TEST_DATA_DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    gdown.download_folder(
+        url=TEST_DATA_DRIVE_URL,
+        output=str(TEST_DATA_DOWNLOAD_DIR),
+        quiet=False,
+        use_cookies=False,
+        remaining_ok=True,
+    )
+    test_archives = sorted(TEST_DATA_DOWNLOAD_DIR.rglob("test.zip"))
+    if len(test_archives) != 1:
+        raise RuntimeError(
+            "Expected exactly one test.zip after the Google Drive download, "
+            f"found {len(test_archives)}: {test_archives}"
+        )
+    test_zip = test_archives[0]
+
+# Download the immutable model bundle from the GitHub Release and verify it.
+bundle = Path("/content/text-orientation-solution-artifacts.zip")
+if not bundle.is_file():
+    gdown.download(ARTIFACT_URL, str(bundle), quiet=False, fuzzy=True)
+
+digest_builder = hashlib.sha256()
+with bundle.open("rb") as stream:
+    for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+        digest_builder.update(chunk)
+digest = digest_builder.hexdigest()
+if digest != ARTIFACT_SHA256:
+    raise ValueError(f"Artifact SHA-256 mismatch: {digest}")
+
+# Prepare the project consumed by the regular inference cell.
+project = Path(PROJECT_DIR)
+(project / "data").mkdir(parents=True, exist_ok=True)
+with zipfile.ZipFile(bundle) as archive:
+    archive.extractall(project)
+
+destination = project / "data/test.zip"
+if destination.resolve() != test_zip.resolve():
+    shutil.copy2(test_zip, destination)
+
+print({
+    "test_zip": str(destination),
+    "artifact_sha256": digest,
+})
 ```
 
-`TEST_ZIP_PATH` is a local filesystem path, not a Google Drive URL. If Drive
-access or automated downloading is unavailable, use the notebook's regular
-upload dialog instead. The test archive is not included in the model Release.
+`TEST_ZIP_PATH` always denotes a local filesystem path; a Drive folder URL
+cannot be assigned to it directly. The replacement cell converts the public
+folder URL into a local archive automatically. The Drive folder must allow
+read access to anyone with the link. The test data remains separate from the
+GitHub model Release.
 
 ### Run a particular trained model
 
