@@ -23,6 +23,7 @@ REQUIRED_SOURCE_FILES = (
     "notebooks/colab/robust_train.ipynb",
     "notebooks/colab/inference.ipynb",
     "notebooks/colab/ensemble.ipynb",
+    "notebooks/colab/solution.ipynb",
     "notebooks/cloudcompute/train.ipynb",
     "notebooks/cloudcompute/optuna.ipynb",
     "notebooks/cloudcompute/robust_train.ipynb",

@@ -11,6 +11,7 @@ identical between environments.
 | Optuna search | `colab/optuna.ipynb` | `cloudcompute/optuna.ipynb` |
 | Robust MobileNet/ViT fine-tuning | `colab/robust_train.ipynb` | `cloudcompute/robust_train.ipynb` |
 | Ensemble weight search | `colab/ensemble.ipynb` | `cloudcompute/ensemble.ipynb` |
+| Reproduce final submission | `colab/solution.ipynb` | — |
 
 Colab uses the mounted Google Drive project directory. CloudCompute uses two
 local paths by default:

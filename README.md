@@ -1,6 +1,49 @@
 # text-orientation-classification
 Avito Bootcamp test task: text orientation classification.
 
+## Final solution
+
+The submitted solution classifies whether text in an image is upright (`0`) or
+rotated by 180 degrees (`1`). It does not perform OCR. The final prediction is
+a calibrated probability `p_180` produced by a probability ensemble:
+
+- 75% robust ViT-B/16;
+- 25% robust MobileNetV3-Large.
+
+Both models are trained on deterministic synthetic upright/rotated pairs. The
+robust profile adds bounded perspective, crop, blur, downscale, shadow/glare,
+and occlusion only to the training split. Validation remains unchanged, which
+makes the standard/robust comparison valid. At inference each image is
+evaluated together with its exact 180-degree rotation, then the paired
+probabilities are combined symmetrically and calibrated using five-fold OOF
+temperature scaling.
+
+The reviewer entry point is
+[`solution.ipynb`](notebooks/colab/solution.ipynb). It downloads the immutable
+artifact bundle, accepts the provided `test.zip`, verifies hashes, runs the two
+components sequentially to stay within Colab memory, and creates the submitted
+`submission.csv`.
+
+### Results
+
+| Candidate | Validation 1 − Brier | Hidden-test 1 − Brier |
+| --- | ---: | ---: |
+| MobileNetV3-Large | 0.927589 | 0.855727 |
+| Robust MobileNetV3-Large | 0.934886 | 0.875987 |
+| ViT-B/16 | 0.943337 | 0.905859 |
+| Robust ViT-B/16 | 0.954320 (OOF calibrated) | 0.928290 |
+| 25% robust MobileNet + 75% robust ViT | **0.956555** | **0.929383** |
+
+The final hidden-test Brier error is `0.07061748`. The submitted file contains
+20,000 unique image IDs and has SHA-256
+`cf3be491f4df56015bce7f78f5db9c35ea7ad5f651d6fdf801ebff99fd1a5482`.
+
+An eight-trial, deadline-sized Optuna search was also run for MobileNet. Its
+best reduced-budget trial reached validation Brier `0.132075` with learning
+rate `1.9057e-4`, dropout `0.1545`, weight decay `5.47e-6`, and symmetry weight
+`0.0550`. It was not promoted because a full-data confirmation run was not
+completed; this avoids presenting tuning-only metrics as a final result.
+
 ## Data audit
 
 The test archive is treated as immutable and read directly with Python's
@@ -110,8 +153,7 @@ PYTHONPATH=. python3 scripts/train.py --config configs/vit_b_16.yaml
 
 Its `384×96` positional-embedding adaptation is documented in
 [docs/vit_b_16.md](docs/vit_b_16.md). Training, recovery, registry, inference,
-and Colab wiring are implemented; the GPU smoke run is still required before
-the model can be treated as an evaluated candidate.
+and Colab wiring are implemented and evaluated in the final comparison above.
 
 After full candidates have been promoted, create a protocol-safe comparison:
 
@@ -175,7 +217,8 @@ motion/downscale/spatial blur, shadow/glare, and occlusion. Robust train
 degradations change reproducibly by epoch; validation remains unchanged.
 Artifacts and recovery live below profile-specific directories, and full
 robust champions use the separate `registry/robust/` branch. They are selected
-explicitly with `MODEL="mobilenet_v3_large_robust"`; `MODEL="best"` retains its
+explicitly with `MODEL="mobilenet_v3_large_robust"` or
+`MODEL="vit_b_16_robust"`; `MODEL="best"` retains its
 standard-only meaning. See [docs/robust_augmentation.md](docs/robust_augmentation.md).
 
 ## Calibration and OCR baselines
