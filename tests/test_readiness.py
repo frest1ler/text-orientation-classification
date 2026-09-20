@@ -26,10 +26,12 @@ def test_source_delivery_is_ready() -> None:
         "notebooks/colab/optuna.ipynb",
         "notebooks/colab/robust_train.ipynb",
         "notebooks/colab/inference.ipynb",
+        "notebooks/colab/ensemble.ipynb",
         "notebooks/cloudcompute/train.ipynb",
         "notebooks/cloudcompute/optuna.ipynb",
         "notebooks/cloudcompute/robust_train.ipynb",
         "notebooks/cloudcompute/inference.ipynb",
+        "notebooks/cloudcompute/ensemble.ipynb",
     }
     train_notebook = (PROJECT_ROOT / "notebooks/colab/train.ipynb").read_text()
     inference_notebook = (PROJECT_ROOT / "notebooks/colab/inference.ipynb").read_text()
@@ -47,10 +49,12 @@ def test_source_delivery_rejects_invalid_notebook(tmp_path: Path) -> None:
         "notebooks/colab/optuna.ipynb",
         "notebooks/colab/robust_train.ipynb",
         "notebooks/colab/inference.ipynb",
+        "notebooks/colab/ensemble.ipynb",
         "notebooks/cloudcompute/train.ipynb",
         "notebooks/cloudcompute/optuna.ipynb",
         "notebooks/cloudcompute/robust_train.ipynb",
         "notebooks/cloudcompute/inference.ipynb",
+        "notebooks/cloudcompute/ensemble.ipynb",
         "configs/baseline.yaml",
         "configs/efficientnet_b0.yaml",
         "configs/vit_b_16.yaml",
@@ -60,6 +64,8 @@ def test_source_delivery_rejects_invalid_notebook(tmp_path: Path) -> None:
         "scripts/promote_robust_champion.py",
         "scripts/compare_robust.py",
         "scripts/infer.py",
+        "scripts/infer_ensemble.py",
+        "scripts/search_ensemble.py",
         "scripts/compare_champions.py",
     ):
         source = PROJECT_ROOT / name

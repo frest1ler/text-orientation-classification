@@ -10,6 +10,7 @@ identical between environments.
 | Test inference and submission | `colab/inference.ipynb` | `cloudcompute/inference.ipynb` |
 | Optuna search | `colab/optuna.ipynb` | `cloudcompute/optuna.ipynb` |
 | Robust fine-tuning | `colab/robust_train.ipynb` | `cloudcompute/robust_train.ipynb` |
+| Ensemble weight search | `colab/ensemble.ipynb` | `cloudcompute/ensemble.ipynb` |
 
 Colab uses the mounted Google Drive project directory. CloudCompute uses two
 local paths by default:
@@ -23,3 +24,9 @@ example, a full ViT run belongs in
 `/root/text-orientation-state/training/recovery/vit_b_16/full` and must contain
 `last.pt`. Stop the instance to preserve its disk; download results before
 deleting the instance.
+
+Ensemble search consumes each champion run's `validation_predictions.npz`,
+checks the shared validation protocol and target order, and stores only a
+small manifest below `registry/ensembles/`. Inference with
+`MODEL="best_ensemble"` runs components sequentially, so only one model is in
+GPU memory at a time.

@@ -22,10 +22,12 @@ REQUIRED_SOURCE_FILES = (
     "notebooks/colab/optuna.ipynb",
     "notebooks/colab/robust_train.ipynb",
     "notebooks/colab/inference.ipynb",
+    "notebooks/colab/ensemble.ipynb",
     "notebooks/cloudcompute/train.ipynb",
     "notebooks/cloudcompute/optuna.ipynb",
     "notebooks/cloudcompute/robust_train.ipynb",
     "notebooks/cloudcompute/inference.ipynb",
+    "notebooks/cloudcompute/ensemble.ipynb",
     "configs/baseline.yaml",
     "configs/efficientnet_b0.yaml",
     "configs/vit_b_16.yaml",
@@ -35,6 +37,8 @@ REQUIRED_SOURCE_FILES = (
     "scripts/promote_robust_champion.py",
     "scripts/compare_robust.py",
     "scripts/infer.py",
+    "scripts/infer_ensemble.py",
+    "scripts/search_ensemble.py",
     "scripts/compare_champions.py",
 )
 

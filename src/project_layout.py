@@ -31,6 +31,10 @@ class ProjectLayout:
         return self.registry / "robust"
 
     @property
+    def ensemble_registry(self) -> Path:
+        return self.registry / "ensembles"
+
+    @property
     def training_runs(self) -> Path:
         return self.root / "training" / "runs"
 
@@ -51,6 +55,10 @@ class ProjectLayout:
         return self.root / "evaluation" / "champions"
 
     @property
+    def ensemble_evaluation(self) -> Path:
+        return self.root / "evaluation" / "ensembles"
+
+    @property
     def optuna_tuning(self) -> Path:
         return self.root / "tuning" / "optuna"
 
@@ -66,6 +74,7 @@ class ProjectLayout:
             self.inference_runs,
             self.inference_recovery,
             self.champion_evaluation,
+            self.ensemble_evaluation,
             self.optuna_tuning,
             self.ocr_runs,
         ):

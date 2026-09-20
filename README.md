@@ -144,6 +144,13 @@ data, recovery checkpoints, registries, and exports and contain no Colab or
 Google Drive dependency. See [notebooks/README.md](notebooks/README.md) for the
 platform matrix and the path used to resume an interrupted ViT run.
 
+Validation-selected probability ensembles are supported through
+`notebooks/colab/ensemble.ipynb` and its CloudCompute counterpart. Ensemble
+manifests live in an isolated `registry/ensembles/` branch; use
+`MODEL="best_ensemble"` in the regular inference notebook. Components run
+sequentially and retain independent recovery state. See
+[docs/ensembles.md](docs/ensembles.md).
+
 Full Colab runs are compared with a separate Google Drive champion for each
 architecture. Checkpoints are promoted by symmetric Brier score only when the
 validation protocol fingerprint matches; quick runs are archived without

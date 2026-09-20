@@ -20,6 +20,8 @@ configs/
 scripts/
   calibrate.py           OOF calibration evaluation and final fit
   compare_champions.py    Protocol-safe cross-architecture ranking reports
+  search_ensemble.py      Deterministic OOF probability-weight search
+  infer_ensemble.py       Sequential resumable ensemble test inference
   import_champion.py     Import a run ZIP into the unified model registry
   infer.py               Resumable symmetric test prediction CLI
   verify_delivery.py     Read-only source and persistent-artifact readiness gate
@@ -39,6 +41,7 @@ src/
   metrics.py             Brier score and diagnostic probability metrics
   models.py              Small CNN and compact pretrained backbones
   inference.py           Champion loading, test loader, and symmetric batches
+  ensemble.py            Ensemble validation, search, registry, and mixing contracts
   inference_recovery.py  Atomic ordered prediction recovery
   diagnostics.py         Numeric inference report and visual contact sheets
   ocr.py                 Tesseract TSV confidence and orientation score
