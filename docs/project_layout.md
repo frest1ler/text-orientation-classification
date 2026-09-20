@@ -15,11 +15,17 @@ text-orientation/
         <model>_<accuracy>.pt
         calibration.json
         champion.json
+    robust/
+      leaderboard.json
+      champions/
+        mobilenet_v3_large/
   training/
     runs/
       <model>/<quick|full>/
+      robust/mobilenet_v3_large/<quick|full>/
     recovery/
       <model>/<quick|full>/
+      robust/mobilenet_v3_large/<quick|full>/
   inference/
     runs/
       <run-id>/

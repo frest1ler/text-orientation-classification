@@ -20,12 +20,16 @@ REQUIRED_SOURCE_FILES = (
     "requirements.txt",
     "colab_train.ipynb",
     "colab_optuna.ipynb",
+    "colab_robust_train.ipynb",
     "colab_inference.ipynb",
     "configs/baseline.yaml",
     "configs/efficientnet_b0.yaml",
     "configs/vit_b_16.yaml",
     "scripts/train.py",
     "scripts/optuna_search.py",
+    "scripts/train_robust.py",
+    "scripts/promote_robust_champion.py",
+    "scripts/compare_robust.py",
     "scripts/infer.py",
     "scripts/compare_champions.py",
 )
@@ -62,6 +66,7 @@ def verify_source(source_root: str | Path) -> dict[str, Any]:
     notebooks = [
         _check_notebook(root / "colab_train.ipynb"),
         _check_notebook(root / "colab_optuna.ipynb"),
+        _check_notebook(root / "colab_robust_train.ipynb"),
         _check_notebook(root / "colab_inference.ipynb"),
     ]
     return {

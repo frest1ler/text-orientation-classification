@@ -21,6 +21,7 @@ def test_source_delivery_is_ready() -> None:
     assert {Path(item["path"]).name for item in result["notebooks"]} == {
         "colab_train.ipynb",
         "colab_optuna.ipynb",
+        "colab_robust_train.ipynb",
         "colab_inference.ipynb",
     }
     train_notebook = (PROJECT_ROOT / "colab_train.ipynb").read_text()
@@ -37,12 +38,16 @@ def test_source_delivery_rejects_invalid_notebook(tmp_path: Path) -> None:
         "requirements.txt",
         "colab_train.ipynb",
         "colab_optuna.ipynb",
+        "colab_robust_train.ipynb",
         "colab_inference.ipynb",
         "configs/baseline.yaml",
         "configs/efficientnet_b0.yaml",
         "configs/vit_b_16.yaml",
         "scripts/train.py",
         "scripts/optuna_search.py",
+        "scripts/train_robust.py",
+        "scripts/promote_robust_champion.py",
+        "scripts/compare_robust.py",
         "scripts/infer.py",
         "scripts/compare_champions.py",
     ):

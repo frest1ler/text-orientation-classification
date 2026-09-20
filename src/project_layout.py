@@ -27,6 +27,10 @@ class ProjectLayout:
         return self.registry / "champions"
 
     @property
+    def robust_registry(self) -> Path:
+        return self.registry / "robust"
+
+    @property
     def training_runs(self) -> Path:
         return self.root / "training" / "runs"
 

@@ -114,6 +114,7 @@ def test_project_layout_and_artifact_sources(tmp_path: Path) -> None:
     layout = ProjectLayout.from_root(tmp_path / "project")
     layout.create_output_directories()
     assert layout.registry.is_dir()
+    assert layout.robust_registry == layout.registry / "robust"
     assert layout.training_runs.is_dir()
     assert layout.champion_evaluation.is_dir()
     assert resolve_artifact_root(layout.root, "drive") == layout.registry
@@ -121,3 +122,19 @@ def test_project_layout_and_artifact_sources(tmp_path: Path) -> None:
     assert resolve_artifact_root(layout.root, "upload", upload) == upload
     with pytest.raises(ValueError, match="uploaded_path"):
         resolve_artifact_root(layout.root, "upload")
+
+
+def test_robust_champion_is_selected_without_changing_standard_best(tmp_path: Path) -> None:
+    registry = tmp_path / "registry"
+    standard = make_bundle(registry, "mobilenet_v3_large", 0.08)
+    robust = make_bundle(registry / "robust", "mobilenet_v3_large", 0.07)
+    write_json(registry / "leaderboard.json", {"models": {"mobilenet_v3_large": standard}})
+    write_json(
+        registry / "robust/leaderboard.json",
+        {"models": {"mobilenet_v3_large": robust}},
+    )
+
+    assert select_champion(registry, "best").model == "mobilenet_v3_large"
+    candidate = select_champion(registry, "mobilenet_v3_large_robust")
+    assert candidate.model == "mobilenet_v3_large_robust"
+    assert candidate.manifest["model"] == "mobilenet_v3_large"

@@ -55,7 +55,8 @@ complete.
 4. Best compact CNN with and without symmetry loss.
 5. Rectangular input-size comparison.
 6. Deterministic train augmentation that changes by epoch while validation
-   remains fixed.
+   remains fixed. Implemented as an optional isolated `robust` MobileNet
+   profile; its GPU quality experiment remains pending.
 7. Direct inference versus symmetric `x + rot180(x)` inference.
 8. ~~Probability calibration using validation predictions only.~~ Implemented
    with stratified OOF evaluation to avoid scoring a calibrator on its own fit

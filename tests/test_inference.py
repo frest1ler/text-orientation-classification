@@ -91,6 +91,22 @@ def test_load_champion_restores_model_and_calibrator(tmp_path: Path) -> None:
     assert loaded.calibrator.method == "uncalibrated"
 
 
+def test_load_robust_alias_uses_manifest_architecture(tmp_path: Path) -> None:
+    standard = make_small_bundle(tmp_path)
+    robust = ChampionBundle(
+        "small_cnn_robust",
+        standard.directory,
+        standard.checkpoint_path,
+        standard.manifest,
+        standard.calibration,
+    )
+
+    loaded = load_champion(robust, torch.device("cpu"))
+
+    assert loaded.bundle.model == "small_cnn_robust"
+    assert loaded.config["model"]["name"] == "small_cnn"
+
+
 def test_load_champion_rejects_manifest_metric_mismatch(tmp_path: Path) -> None:
     bundle = make_small_bundle(tmp_path)
     bundle.manifest["metrics"] = {"symmetric": {"brier_score": 0.2}}

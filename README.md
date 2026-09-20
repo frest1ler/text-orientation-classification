@@ -154,6 +154,17 @@ trial. The exported `best_config.yaml` must complete full training and
 calibration before normal champion promotion can consider it. See
 [docs/optuna.md](docs/optuna.md).
 
+## Optional robust augmentation
+
+`colab_robust_train.ipynb` compares the unchanged `standard` train profile
+with an isolated `robust` profile containing bounded perspective, cropping,
+motion/downscale/spatial blur, shadow/glare, and occlusion. Robust train
+degradations change reproducibly by epoch; validation remains unchanged.
+Artifacts and recovery live below profile-specific directories, and full
+robust champions use the separate `registry/robust/` branch. They are selected
+explicitly with `MODEL="mobilenet_v3_large_robust"`; `MODEL="best"` retains its
+standard-only meaning. See [docs/robust_augmentation.md](docs/robust_augmentation.md).
+
 ## Calibration and OCR baselines
 
 Evaluate leakage-resistant five-fold calibration for a completed run:

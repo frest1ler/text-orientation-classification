@@ -102,11 +102,32 @@ def select_champion(registry_or_bundle: str | Path, model: str = "best") -> Cham
     root = Path(registry_or_bundle)
     if (root / "champion.json").is_file():
         bundle = _validate_bundle(root)
+        robust_alias = f"{bundle.model}_robust"
+        if model == robust_alias:
+            return ChampionBundle(
+                robust_alias,
+                bundle.directory,
+                bundle.checkpoint_path,
+                bundle.manifest,
+                bundle.calibration,
+            )
         if model not in {"best", bundle.model}:
             raise ValueError(
                 f"Uploaded bundle contains '{bundle.model}', not requested '{model}'"
             )
         return bundle
+
+    if model.endswith("_robust"):
+        base_model = model.removesuffix("_robust")
+        robust_root = root / "robust"
+        bundle = select_champion(robust_root, base_model)
+        return ChampionBundle(
+            model,
+            bundle.directory,
+            bundle.checkpoint_path,
+            bundle.manifest,
+            bundle.calibration,
+        )
 
     leaderboard = _read_json(root / "leaderboard.json")
     models = leaderboard.get("models")

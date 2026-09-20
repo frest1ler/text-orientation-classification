@@ -50,7 +50,8 @@ def load_champion(bundle: ChampionBundle, device: torch.device) -> LoadedChampio
         raise ValueError("checkpoint metrics do not match champion manifest")
     config = checkpoint["config"]
     model_config = config.get("model", {})
-    if model_config.get("name") != bundle.model:
+    architecture = model_config.get("name")
+    if architecture != bundle.manifest.get("model"):
         raise ValueError("checkpoint model does not match champion manifest")
     final = bundle.calibration["final_calibrator"]
     calibrator = BinaryCalibrator(
@@ -59,7 +60,7 @@ def load_champion(bundle: ChampionBundle, device: torch.device) -> LoadedChampio
         intercept=float(final["intercept"]),
     )
     model = build_model(
-        bundle.model,
+        architecture,
         dropout=float(model_config["dropout"]),
         pretrained=False,
         input_height=int(model_config["input_height"]),
