@@ -13,6 +13,15 @@ identical between environments.
 | Ensemble weight search | `colab/ensemble.ipynb` | `cloudcompute/ensemble.ipynb` |
 | Reproduce final submission | `colab/solution.ipynb` | — |
 
+Detailed, copy/paste-oriented instructions are kept next to the notebooks:
+
+- [Google Colab guide](colab/README.md)
+- [CloudCompute / Linux GPU guide](cloudcompute/README.md)
+
+If the goal is only to reproduce the submitted result, use
+`colab/solution.ipynb`; it is self-contained apart from the issued `test.zip`.
+The other notebooks are experiment and registry workflows.
+
 Colab uses the mounted Google Drive project directory. CloudCompute uses two
 local paths by default:
 

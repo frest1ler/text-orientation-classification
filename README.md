@@ -24,6 +24,52 @@ artifact bundle, accepts the provided `test.zip`, verifies hashes, runs the two
 components sequentially to stay within Colab memory, and creates the submitted
 `submission.csv`.
 
+### Reproduce the submitted result in Google Colab
+
+This is the shortest path for a reviewer. No training and no Google Drive
+registry are required.
+
+1. Open [`notebooks/colab/solution.ipynb`](notebooks/colab/solution.ipynb) in
+   Google Colab and select a GPU runtime.
+2. Keep the pinned `REVISION`, `ARTIFACT_URL`, and `ARTIFACT_SHA256` unchanged.
+3. Put the issued archive at `/content/test.zip`, or leave it absent and select
+   `test.zip` in the upload dialog created by the notebook.
+4. Choose **Runtime → Run all**. The notebook clones the pinned source revision,
+   installs dependencies, downloads the immutable Release asset, verifies its
+   SHA-256, and runs the final ensemble.
+5. Download the generated `submission.csv`. A full run must contain 20,000
+   unique IDs. For the original test archive its expected SHA-256 is
+   `cf3be491f4df56015bce7f78f5db9c35ea7ad5f651d6fdf801ebff99fd1a5482`.
+
+The model bundle is published separately as a GitHub Release asset and is not
+stored in Git history:
+[`text-orientation-solution-artifacts.zip`](https://github.com/frest1ler/text-orientation-classification/releases/download/solution-v1/text-orientation-solution-artifacts.zip).
+
+### Run a particular trained model
+
+Use [`notebooks/colab/inference.ipynb`](notebooks/colab/inference.ipynb) when a
+persistent registry already exists at
+`/content/drive/MyDrive/text-orientation`. Put the test archive at
+`text-orientation/data/test.zip`, then set `MODEL` to one of:
+
+| `MODEL` | Result |
+| --- | --- |
+| `best` | Best standard single-model champion |
+| `mobilenet_v3_large` | Standard MobileNetV3-Large |
+| `efficientnet_b0` | Standard EfficientNet-B0 |
+| `vit_b_16` | Standard ViT-B/16 |
+| `mobilenet_v3_large_robust` | Robust MobileNetV3-Large |
+| `vit_b_16_robust` | Robust ViT-B/16 |
+| `best_ensemble` | Promoted ensemble from `registry/ensembles` |
+
+For a complete submission use `SMOKE_IMAGES=None`; use `SMOKE_IMAGES=64` only
+to verify the pipeline. Keep `BATCH_SIZE=None` for architecture-safe defaults.
+Exact folder layouts, copy/paste settings, expected outputs, training,
+recovery, robust fine-tuning, ensemble search, and Optuna are documented in
+[`notebooks/colab/README.md`](notebooks/colab/README.md). Rented-server
+instructions are in
+[`notebooks/cloudcompute/README.md`](notebooks/cloudcompute/README.md).
+
 ### Results
 
 | Candidate | Validation 1 − Brier | Hidden-test 1 − Brier |
