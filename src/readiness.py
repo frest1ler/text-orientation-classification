@@ -18,10 +18,14 @@ from src.test_data import ZipTestDataset, zip_sha256
 REQUIRED_SOURCE_FILES = (
     "README.md",
     "requirements.txt",
-    "colab_train.ipynb",
-    "colab_optuna.ipynb",
-    "colab_robust_train.ipynb",
-    "colab_inference.ipynb",
+    "notebooks/colab/train.ipynb",
+    "notebooks/colab/optuna.ipynb",
+    "notebooks/colab/robust_train.ipynb",
+    "notebooks/colab/inference.ipynb",
+    "notebooks/cloudcompute/train.ipynb",
+    "notebooks/cloudcompute/optuna.ipynb",
+    "notebooks/cloudcompute/robust_train.ipynb",
+    "notebooks/cloudcompute/inference.ipynb",
     "configs/baseline.yaml",
     "configs/efficientnet_b0.yaml",
     "configs/vit_b_16.yaml",
@@ -64,10 +68,9 @@ def verify_source(source_root: str | Path) -> dict[str, Any]:
         config = load_config(root / name)
         configs[config.model.name] = name
     notebooks = [
-        _check_notebook(root / "colab_train.ipynb"),
-        _check_notebook(root / "colab_optuna.ipynb"),
-        _check_notebook(root / "colab_robust_train.ipynb"),
-        _check_notebook(root / "colab_inference.ipynb"),
+        _check_notebook(root / name)
+        for name in REQUIRED_SOURCE_FILES
+        if name.endswith(".ipynb")
     ]
     return {
         "status": "ready",

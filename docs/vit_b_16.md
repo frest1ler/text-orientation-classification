@@ -37,7 +37,7 @@ The standard training phases, AMP, symmetry loss, epoch recovery, calibration,
 and early stopping are shared with the CNN candidates. Recovery is isolated at
 `training/recovery/vit_b_16/<quick|full>`.
 
-`colab_train.ipynb` accepts `MODEL="vit"`. A quick run uses batch sizes 16/32;
+`notebooks/colab/train.ipynb` accepts `MODEL="vit"`. A quick run uses batch sizes 16/32;
 full runs read the same values from the ViT config. CUDA OOM is reported with
 an explicit 8/16 fallback suggestion but batch size is never changed silently.
 A calibrated full run may promote only `registry/champions/vit_b_16/`, while

@@ -132,11 +132,17 @@ training, mixed precision on CUDA, and best-checkpoint selection by symmetric
 Brier score. Details are in
 [docs/compact_models.md](docs/compact_models.md).
 
-For the first GPU verification, open `colab_train.ipynb`, choose `mobilenet`,
+For the first GPU verification, open `notebooks/colab/train.ipynb`, choose `mobilenet`,
 `efficientnet`, or `vit`, keep `QUICK_RUN=True`, and run all cells on a T4
 runtime.
 The exact steps and the result archive to return are documented in
 [docs/colab_run.md](docs/colab_run.md).
+
+The same four workflows are available for a rented CloudCompute instance in
+`notebooks/cloudcompute/`. They use `/root/text-orientation-state` for local
+data, recovery checkpoints, registries, and exports and contain no Colab or
+Google Drive dependency. See [notebooks/README.md](notebooks/README.md) for the
+platform matrix and the path used to resume an interrupted ViT run.
 
 Full Colab runs are compared with a separate Google Drive champion for each
 architecture. Checkpoints are promoted by symmetric Brier score only when the
@@ -145,7 +151,7 @@ promotion.
 
 ## Restricted Optuna search
 
-Open `colab_optuna.ipynb` for an isolated, resumable MobileNetV3-Large search.
+Open `notebooks/colab/optuna.ipynb` for an isolated, resumable MobileNetV3-Large search.
 It tunes only fine-tuning learning rate, weight decay, dropout, and symmetry
 loss weight, using symmetric validation Brier as the objective. Start with the
 two-trial smoke mode, then use the deadline-sized 8–12 trial search. Results
@@ -156,7 +162,7 @@ calibration before normal champion promotion can consider it. See
 
 ## Optional robust augmentation
 
-`colab_robust_train.ipynb` compares the unchanged `standard` train profile
+`notebooks/colab/robust_train.ipynb` compares the unchanged `standard` train profile
 with an isolated `robust` profile containing bounded perspective, cropping,
 motion/downscale/spatial blur, shadow/glare, and occlusion. Robust train
 degradations change reproducibly by epoch; validation remains unchanged.
@@ -243,7 +249,7 @@ and four contact sheets below `inference/runs/<run-id>/`. A limited
 `--limit 64` smoke run writes diagnostics but deliberately does not create a
 submission.
 
-For a reviewer-friendly Colab launch, open `colab_inference.ipynb`, choose
+For a reviewer-friendly Colab launch, open `notebooks/colab/inference.ipynb`, choose
 `MODEL="best"` or a named champion, and run all cells. It supports both the
 Drive registry and a separately uploaded champion bundle. See
 [docs/inference_pipeline.md](docs/inference_pipeline.md).

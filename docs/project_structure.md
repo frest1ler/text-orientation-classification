@@ -10,8 +10,9 @@ Persistent Drive artifacts follow the portable layout documented in
 ## Current modules
 
 ```text
-colab_train.ipynb        Concise Colab GPU training and artifact export
-colab_inference.ipynb    Reviewer-facing best/named champion inference
+notebooks/
+  colab/                 Google Colab training, inference, Optuna, and robust runs
+  cloudcompute/          Equivalent wrappers using persistent local storage
 configs/
   baseline.yaml          Validated baseline experiment settings
   efficientnet_b0.yaml   Controlled compact-backbone comparison

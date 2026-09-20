@@ -32,7 +32,7 @@ Smoke and main studies are separated so they can never be ranked together.
 
 ## Colab flow
 
-Open `colab_optuna.ipynb` and first use `SMOKE_RUN=True`. This runs at most two
+Open `notebooks/colab/optuna.ipynb` and first use `SMOKE_RUN=True`. This runs at most two
 trials with 1,024 train and 512 validation samples and two total epochs. Then
 set `SMOKE_RUN=False`; the recommended deadline budget is 8–12 trials, 8,000
 train samples, the locked 5,000-sample validation set, one frozen epoch, and

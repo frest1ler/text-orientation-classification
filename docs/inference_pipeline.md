@@ -1,7 +1,7 @@
 # Resumable inference and submission
 
 The inference stage produces a competition-ready submission and a reproducible
-diagnostic package. `colab_inference.ipynb` is the one-click reviewer entry
+diagnostic package. `notebooks/colab/inference.ipynb` is the one-click reviewer entry
 point.
 
 ## Inputs
@@ -83,7 +83,7 @@ output directory is useful.
 
 ## Colab reviewer flow
 
-Open `colab_inference.ipynb`, set `PROJECT_DIR`, and choose:
+Open `notebooks/colab/inference.ipynb`, set `PROJECT_DIR`, and choose:
 
 - `MODEL="best"` for the registry winner or a concrete architecture name;
 - `ARTIFACT_SOURCE="drive"` for `PROJECT_DIR/registry`;

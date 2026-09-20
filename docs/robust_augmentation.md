@@ -35,7 +35,7 @@ in `runtime.json`.
 
 ## Colab experiment
 
-Open `colab_robust_train.ipynb`. Start with:
+Open `notebooks/colab/robust_train.ipynb`. Start with:
 
 ```python
 AUGMENTATION_PROFILE = "robust"

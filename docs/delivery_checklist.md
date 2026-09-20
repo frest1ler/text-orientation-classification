@@ -51,9 +51,9 @@ python3 -m scripts.verify_delivery \
 
 ## Reviewer paths
 
-1. Open `colab_train.ipynb` to reproduce a quick or full candidate training
+1. Open `notebooks/colab/train.ipynb` to reproduce a quick or full candidate training
    run. Only calibrated full runs may update a per-model champion.
-2. Open `colab_inference.ipynb`, initially set `SMOKE_IMAGES=64`, and run all
+2. Open `notebooks/colab/inference.ipynb`, initially set `SMOKE_IMAGES=64`, and run all
    cells.
 3. Set `SMOKE_IMAGES=None` and rerun inference to create the complete
    `submission.csv`.

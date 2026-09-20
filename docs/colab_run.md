@@ -6,13 +6,13 @@ path. It does not require `test.zip` because training data is synthetic.
 
 ## Before opening Colab
 
-Push the commit containing `colab_train.ipynb` to the public `main` branch.
+Push the commit containing `notebooks/colab/train.ipynb` to the public `main` branch.
 The notebook clones that branch into a fresh `/content` directory, which
 prevents results from depending on a previous Colab session.
 
 ## Run
 
-1. Open `colab_train.ipynb` in Google Colab.
+1. Open `notebooks/colab/train.ipynb` in Google Colab.
 2. Select **Runtime → Change runtime type → T4 GPU**.
 3. Leave the initial parameters as:
 

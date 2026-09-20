@@ -18,14 +18,21 @@ def test_source_delivery_is_ready() -> None:
         "efficientnet_b0",
         "vit_b_16",
     }
-    assert {Path(item["path"]).name for item in result["notebooks"]} == {
-        "colab_train.ipynb",
-        "colab_optuna.ipynb",
-        "colab_robust_train.ipynb",
-        "colab_inference.ipynb",
+    assert {
+        str(Path(item["path"]).relative_to(PROJECT_ROOT))
+        for item in result["notebooks"]
+    } == {
+        "notebooks/colab/train.ipynb",
+        "notebooks/colab/optuna.ipynb",
+        "notebooks/colab/robust_train.ipynb",
+        "notebooks/colab/inference.ipynb",
+        "notebooks/cloudcompute/train.ipynb",
+        "notebooks/cloudcompute/optuna.ipynb",
+        "notebooks/cloudcompute/robust_train.ipynb",
+        "notebooks/cloudcompute/inference.ipynb",
     }
-    train_notebook = (PROJECT_ROOT / "colab_train.ipynb").read_text()
-    inference_notebook = (PROJECT_ROOT / "colab_inference.ipynb").read_text()
+    train_notebook = (PROJECT_ROOT / "notebooks/colab/train.ipynb").read_text()
+    inference_notebook = (PROJECT_ROOT / "notebooks/colab/inference.ipynb").read_text()
     assert "configs/vit_b_16.yaml" in train_notebook
     assert "TRAIN_BATCH_SIZE = None" in train_notebook
     assert "vit_b_16" in inference_notebook
@@ -36,10 +43,14 @@ def test_source_delivery_rejects_invalid_notebook(tmp_path: Path) -> None:
     for name in (
         "README.md",
         "requirements.txt",
-        "colab_train.ipynb",
-        "colab_optuna.ipynb",
-        "colab_robust_train.ipynb",
-        "colab_inference.ipynb",
+        "notebooks/colab/train.ipynb",
+        "notebooks/colab/optuna.ipynb",
+        "notebooks/colab/robust_train.ipynb",
+        "notebooks/colab/inference.ipynb",
+        "notebooks/cloudcompute/train.ipynb",
+        "notebooks/cloudcompute/optuna.ipynb",
+        "notebooks/cloudcompute/robust_train.ipynb",
+        "notebooks/cloudcompute/inference.ipynb",
         "configs/baseline.yaml",
         "configs/efficientnet_b0.yaml",
         "configs/vit_b_16.yaml",
@@ -55,9 +66,10 @@ def test_source_delivery_rejects_invalid_notebook(tmp_path: Path) -> None:
         destination = tmp_path / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(source.read_bytes())
-    notebook = json.loads((tmp_path / "colab_inference.ipynb").read_text())
+    notebook_path = tmp_path / "notebooks/colab/inference.ipynb"
+    notebook = json.loads(notebook_path.read_text())
     notebook["cells"].append({"cell_type": "code", "source": ["not valid python !"]})
-    (tmp_path / "colab_inference.ipynb").write_text(json.dumps(notebook))
+    notebook_path.write_text(json.dumps(notebook))
 
     with pytest.raises(SyntaxError):
         verify_source(tmp_path)
