@@ -47,6 +47,10 @@ class ProjectLayout:
         return self.root / "evaluation" / "champions"
 
     @property
+    def optuna_tuning(self) -> Path:
+        return self.root / "tuning" / "optuna"
+
+    @property
     def ocr_runs(self) -> Path:
         return self.root / "ocr" / "runs"
 
@@ -58,6 +62,7 @@ class ProjectLayout:
             self.inference_runs,
             self.inference_recovery,
             self.champion_evaluation,
+            self.optuna_tuning,
             self.ocr_runs,
         ):
             path.mkdir(parents=True, exist_ok=True)

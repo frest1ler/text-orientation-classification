@@ -143,6 +143,17 @@ architecture. Checkpoints are promoted by symmetric Brier score only when the
 validation protocol fingerprint matches; quick runs are archived without
 promotion.
 
+## Restricted Optuna search
+
+Open `colab_optuna.ipynb` for an isolated, resumable MobileNetV3-Large search.
+It tunes only fine-tuning learning rate, weight decay, dropout, and symmetry
+loss weight, using symmetric validation Brier as the objective. Start with the
+two-trial smoke mode, then use the deadline-sized 8–12 trial search. Results
+are stored below `tuning/optuna/`; the model registry is never modified by a
+trial. The exported `best_config.yaml` must complete full training and
+calibration before normal champion promotion can consider it. See
+[docs/optuna.md](docs/optuna.md).
+
 ## Calibration and OCR baselines
 
 Evaluate leakage-resistant five-fold calibration for a completed run:

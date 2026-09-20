@@ -65,8 +65,10 @@ complete.
 10. ~~Observable and resumable Colab training.~~ Implemented with independent
     recovery directories for each architecture.
 11. Full EfficientNet-B0 run and compact-model comparison.
-12. Optuna search on the best compact architecture, followed by full-data
-    confirmation of the strongest configurations.
+12. Optuna search on the best compact architecture. The isolated resumable
+    search, pruning, Colab entry point, and full-data confirmation config are
+    implemented. Under the deadline budget, only the single best configuration
+    is confirmed, and only when the short search improves Brier materially.
 13. ViT-B/16 after the compact pipeline is stable. Model construction,
     rectangular positional embeddings, freezing, configuration, training,
     recovery, registry, Colab, and inference are implemented; smoke/full GPU
