@@ -24,10 +24,25 @@ artifact bundle, accepts the provided `test.zip`, verifies hashes, runs the two
 components sequentially to stay within Colab memory, and creates the submitted
 `submission.csv`.
 
-### Reproduce the submitted result in Google Colab
+## Quick start — get `submission.csv` in Google Colab
 
 This is the shortest path for a reviewer. No training and no Google Drive
 registry are required.
+
+The notebook can be used without cloning the repository manually:
+
+1. Download [`solution.ipynb`](https://raw.githubusercontent.com/frest1ler/text-orientation-classification/solution-v1/notebooks/colab/solution.ipynb).
+2. Open [Google Colab](https://colab.research.google.com/), select **File →
+   Upload notebook**, and choose the downloaded `solution.ipynb`.
+3. Select **Runtime → Change runtime type → GPU**.
+4. Select **Runtime → Run all** and wait for both models to finish.
+5. The notebook automatically downloads the pinned `test.zip` and model
+   bundle, checks their integrity, creates `submission.csv`, and starts its
+   browser download.
+
+No repository, dataset, checkpoint, or configuration file needs to be uploaded
+manually. The complete run can take approximately 25–55 minutes on a Colab T4,
+in addition to download time.
 
 1. Open [`notebooks/colab/solution.ipynb`](notebooks/colab/solution.ipynb) in
    Google Colab and select a GPU runtime.
@@ -45,7 +60,7 @@ The model bundle is published separately as a GitHub Release asset and is not
 stored in Git history:
 [`text-orientation-solution-artifacts.zip`](https://github.com/frest1ler/text-orientation-classification/releases/download/solution-v1/text-orientation-solution-artifacts.zip).
 
-#### Test data source
+### Test data source
 
 The `solution-v3` notebook downloads the organizer-provided archive directly
 from [Google Drive](https://drive.google.com/file/d/1PoppN_066oSdaSdqStulA6SgeBqS8PTn/view?usp=sharing)
@@ -58,7 +73,7 @@ not duplicated in Git or in the model Release. If redistribution access is
 withdrawn, a reviewer can still use the standard experiment inference notebook
 with their own issued archive at `PROJECT_DIR/data/test.zip`.
 
-### Run a particular trained model
+## Run a particular trained model
 
 Use [`notebooks/colab/inference.ipynb`](notebooks/colab/inference.ipynb) when a
 persistent registry already exists at
@@ -83,7 +98,7 @@ recovery, robust fine-tuning, ensemble search, and Optuna are documented in
 instructions are in
 [`notebooks/cloudcompute/README.md`](notebooks/cloudcompute/README.md).
 
-### Results
+## Results
 
 | Candidate | Validation 1 − Brier | Hidden-test 1 − Brier |
 | --- | ---: | ---: |
